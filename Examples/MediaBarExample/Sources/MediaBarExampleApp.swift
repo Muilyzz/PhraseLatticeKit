@@ -79,9 +79,17 @@ struct ContentView: View {
                 Divider()
 
                 ScrollView {
+                    // The Muilyzz pattern via the phraseHeader slot: each
+                    // phrase carries its own slice of the media timeline.
                     LatticeGridView(source: sheet, selection: $selection) { beat in
                         Text(beat.ordinal.map(String.init) ?? "·")
                             .font(.caption2.monospacedDigit())
+                    } phraseHeader: { phrase in
+                        PhraseMediaStrip(
+                            phrase: phrase,
+                            timeMap: timeMap,
+                            mediaSeconds: mediaSeconds
+                        )
                     }
                 }
             }
@@ -96,6 +104,56 @@ struct ContentView: View {
             format: "media %.2f s  →  score beat %.2f  ·  %@",
             mediaSeconds, beat, selection?.label ?? "before the score"
         )
+    }
+}
+
+/// Injected into the grid's `phraseHeader` slot — a view extension the base
+/// kit never anticipated: each phrase carries **its own slice of the media
+/// timeline** (the Muilyzz pattern), with the playhead appearing inside
+/// whichever phrase currently contains the media position.
+struct PhraseMediaStrip: View {
+    let phrase: ScoreStructureSpan
+    let timeMap: MediaTimeMap
+    let mediaSeconds: Double
+
+    private var window: (start: Double, end: Double)? {
+        guard
+            let start = try? timeMap.mediaTime(forScoreTick: phrase.range.startTick),
+            let end = try? timeMap.mediaTime(forScoreTick: phrase.range.endTick),
+            end > start
+        else { return nil }
+        return (start, end)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(phrase.label)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                if let window {
+                    Text(String(format: "%.1f – %.1f s", window.start, window.end))
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            if let window {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.accentColor.opacity(0.25))
+                        if (window.start..<window.end).contains(mediaSeconds) {
+                            let fraction = (mediaSeconds - window.start) / (window.end - window.start)
+                            Capsule()
+                                .fill(Color.accentColor)
+                                .frame(width: 2.5)
+                                .offset(x: geo.size.width * fraction)
+                        }
+                    }
+                }
+                .frame(height: 5)
+            }
+        }
     }
 }
 
