@@ -40,6 +40,7 @@ struct MediaBarExampleApp: App {
 struct ContentView: View {
     private let sheet = SongSheet()
     @State private var mediaSeconds: Double = 0
+    @State private var committedSeconds: Double?
     @State private var selection: ScoreStructureSpan?
 
     private var mediaDuration: Double {
@@ -64,11 +65,22 @@ struct ContentView: View {
                     scoreEndTick: sheet.durationTicks,
                     mediaSeconds: $mediaSeconds
                 ) { seconds in
-                    // Continuous → discrete: the whole point of the kit.
-                    guard let tick = try? timeMap.scoreTick(forMediaTime: seconds) else { return }
-                    selection = ScoreStructureCursor
-                        .allSpans(at: .beat, in: sheet)
-                        .first { $0.range.contains(tick) }
+                    // Scrub tier — light preview only. Continuous → discrete
+                    // through the map, with a change guard so derived state
+                    // is written only when the beat actually changes.
+                    guard
+                        let tick = try? timeMap.scoreTick(forMediaTime: seconds),
+                        let beat = ScoreStructureCursor
+                            .allSpans(at: .beat, in: sheet)
+                            .first(where: { $0.range.contains(tick) }),
+                        selection?.id != beat.id
+                    else { return }
+                    selection = beat
+                } onCommit: { seconds in
+                    // Commit tier — the authoritative event, fired once when
+                    // the drag ends. A real host runs the heavy work here:
+                    // player.seek, waveform fetch, persistence.
+                    committedSeconds = seconds
                 }
                 .frame(height: 44)
 
@@ -100,9 +112,10 @@ struct ContentView: View {
 
     private var statusLine: String {
         let beat = (try? timeMap.continuousScoreBeat(forMediaTime: mediaSeconds)) ?? 0
+        let commit = committedSeconds.map { String(format: "committed %.2f s", $0) } ?? "no commit yet"
         return String(
-            format: "media %.2f s  →  score beat %.2f  ·  %@",
-            mediaSeconds, beat, selection?.label ?? "before the score"
+            format: "media %.2f s → beat %.2f · %@ · %@",
+            mediaSeconds, beat, selection?.label ?? "before the score", commit
         )
     }
 }
@@ -164,20 +177,27 @@ struct MediaBar: View {
     let mediaDuration: Double
     let scoreEndTick: ScoreTick
     @Binding var mediaSeconds: Double
+    /// Fires continuously while dragging — keep the work light (visuals,
+    /// cheap derived state).
     var onScrub: (Double) -> Void
+    /// Fires once when the drag ends — the authoritative event for heavy
+    /// work (seek, loads, persistence).
+    var onCommit: (Double) -> Void
 
     init(
         timeMap: MediaTimeMap,
         mediaDuration: Double,
         scoreEndTick: ScoreTick,
         mediaSeconds: Binding<Double>,
-        onScrub: @escaping (Double) -> Void
+        onScrub: @escaping (Double) -> Void,
+        onCommit: @escaping (Double) -> Void
     ) {
         self.timeMap = timeMap
         self.mediaDuration = mediaDuration
         self.scoreEndTick = scoreEndTick
         self._mediaSeconds = mediaSeconds
         self.onScrub = onScrub
+        self.onCommit = onCommit
     }
 
     private var downbeatFraction: Double {
@@ -219,6 +239,11 @@ struct MediaBar: View {
                         let fraction = min(max(value.location.x / width, 0), 1)
                         mediaSeconds = fraction * mediaDuration
                         onScrub(mediaSeconds)
+                    }
+                    .onEnded { value in
+                        let fraction = min(max(value.location.x / width, 0), 1)
+                        mediaSeconds = fraction * mediaDuration
+                        onCommit(mediaSeconds)
                     }
             )
         }

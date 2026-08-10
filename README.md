@@ -65,6 +65,28 @@ The decorated projection (`ScoreStructureIndex.phraseSpans` overload from this
 kit) then prepends the ordinal-0 lead-in marker — the lattice itself stays
 media-free.
 
+## State-sync guide (cursor ↔ media position)
+
+The round trip is **not** the identity — seconds → nearest tick → seconds
+loses the sub-tick remainder (24 PPQ quantization). Wiring automatic two-way
+listeners between the two worlds therefore produces jitter and feedback
+loops. The rules that keep it stable:
+
+1. **Convert explicitly, never implicitly.** Every crossing goes through
+   `MediaTimeMap`, called at the event site — no `.onChange`-style observers
+   that echo one state into the other.
+2. **One master per gesture.** While scrubbing, media seconds are the truth
+   and the cursor is a derived projection; while navigating, ticks are the
+   truth. Derived updates never re-emit events, and are guarded — write only
+   when the derived span actually changed.
+3. **Two event tiers.** Drag events are auxiliary: light visuals and cheap
+   derivations only. The authoritative event fires **once, when the drag
+   ends** — that is where a host seeks the player, fetches waveforms, or
+   persists.
+4. When it grows past two states (e.g. a playback clock joins), promote the
+   pair into one reducer — `(state, event) → state` with the map as pure
+   math inside — so ownership is decided in a single place.
+
 ## Contents
 
 - `ScoreLinkedMedia` / `ScoreMediaLinkedSource` — the media *concept* and the
