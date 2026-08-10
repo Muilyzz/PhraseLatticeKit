@@ -14,10 +14,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7765731A5E2385BDD97B3A1B /* ScoreLatticeKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ScoreLatticeKit; path = ../..; sourceTree = SOURCE_ROOT; };
 		8FE639DA2F2CA94B0DB82F84 /* MediaBarExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MediaBarExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A650471997EDD4A6AC9ED6C1 /* PhraseLatticeKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PhraseLatticeKit; path = ../../../PhraseLatticeKit; sourceTree = SOURCE_ROOT; };
 		AB288B9FA082B4EE3C699DF4 /* MediaBarExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarExampleApp.swift; sourceTree = "<group>"; };
-		FDC9077D349777502C44CDBB /* MediaAlignKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MediaAlignKit; path = ../..; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,8 +44,7 @@
 		6743D43F8B3545A923BDC0F1 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				FDC9077D349777502C44CDBB /* MediaAlignKit */,
-				A650471997EDD4A6AC9ED6C1 /* PhraseLatticeKit */,
+				7765731A5E2385BDD97B3A1B /* ScoreLatticeKit */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -114,7 +112,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				87D34F75401F28C4B2902CDC /* XCLocalSwiftPackageReference "../.." */,
-				114305FEE66628D40782D839 /* XCLocalSwiftPackageReference "../../../PhraseLatticeKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EEB91DC27AF296D6BC4387F8 /* Products */;
@@ -317,10 +314,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		114305FEE66628D40782D839 /* XCLocalSwiftPackageReference "../../../PhraseLatticeKit" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../../PhraseLatticeKit;
-		};
 		87D34F75401F28C4B2902CDC /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../..;

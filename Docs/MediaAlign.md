@@ -1,10 +1,13 @@
-# MediaAlignKit
+# MediaAlign
+
+*Module of ScoreLatticeKit — formerly the standalone MediaAlignKit.*
 
 **Conversion math between the continuous physical world (a song, seconds) and
-the discrete conceptual world (the [PhraseLattice](../PhraseLatticeKit) tick grid).**
+the discrete conceptual world (the [`PhraseLattice`](../Sources/PhraseLattice)
+tick grid).**
 
-Extension pack for PhraseLatticeKit — cores mate with cores: this kit depends
-on `PhraseLattice` and nothing else.
+Cores mate with cores: this module depends on `PhraseLattice` and nothing
+else.
 
 ```swift
 import PhraseLattice
@@ -20,7 +23,7 @@ try map.continuousScoreBeat(forMediaTime: 0.7)   // -1.0 (intro before the score
 try map.scoreTick(forMediaTime: 2.21)        // 48   (nearest lattice point)
 ```
 
-## What this kit is — and is not
+## What this module is — and is not
 
 Two litmus tests define the boundary. Logic belongs here only if:
 
@@ -28,20 +31,20 @@ Two litmus tests define the boundary. Logic belongs here only if:
    media second X") and the bijection it induces through the tempo map are
    facts, not runtime behavior. No clocks, no `Date`, no playback state —
    every function is deterministic.
-2. **It needs no provider names.** The kit never learns what the media is.
+2. **It needs no provider names.** The module never learns what the media is.
 
 Everything that fails those tests lives in the layers around it:
 
 | Concern | Where it lives |
 |---|---|
-| tick ↔ seconds bijection, given an anchor | **this kit** |
+| tick ↔ seconds bijection, given an anchor | **this module** |
 | *Finding* the anchor (audio evidence, catalog data) | your app, above |
 | Reconciling multiple physical timelines (previews, edits) | your app — reduce to one anchor first |
 | Following a playback clock, latency compensation (*sync*) | your player layer |
 
 Fold any source-specific corrections into `downbeatTimeSeconds` **before**
-constructing `MediaAnchor` — the kit receives one effective number and asks
-no questions.
+constructing `MediaAnchor` — the module receives one effective number and
+asks no questions.
 
 ## The media *concept* also lives here
 
@@ -61,9 +64,9 @@ extension MyDocument: ScoreMediaLinkedSource {
 }
 ```
 
-The decorated projection (`ScoreStructureIndex.phraseSpans` overload from this
-kit) then prepends the ordinal-0 lead-in marker — the lattice itself stays
-media-free.
+The decorated projection (`ScoreStructureIndex.phraseSpans` overload from
+this module) then prepends the ordinal-0 lead-in marker — the lattice itself
+stays media-free.
 
 ## State-sync guide (cursor ↔ media position)
 

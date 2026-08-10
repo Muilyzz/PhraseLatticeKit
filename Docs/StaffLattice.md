@@ -1,14 +1,16 @@
-# StaffLatticeKit
+# StaffLattice
 
-**The notation (phenotype) world over the lattice.**
+*Module of ScoreLatticeKit — formerly the standalone StaffLatticeKit.*
+
+**The notation (phenotype) world over the lattice — the Y axis.**
 
 Pitch itself is notation-neutral: a MIDI-like genotype has no opinion about
 ♭ vs ♯. Determinism appears only when a **key signature** exists — its
-preference makes genotype → phenotype a 1:1 translation. This kit owns that
-translation and the staff it induces.
+preference makes genotype → phenotype a 1:1 translation. This module owns
+that translation and the staff it induces.
 
 ```swift
-.package(url: "https://github.com/Muilyzz/StaffLatticeKit.git", from: "1.0.0"),
+.product(name: "StaffLattice", package: "ScoreLatticeKit"),
 ```
 
 ## The translation
@@ -45,8 +47,7 @@ drawn only when they differ from the signature.
 
 ## The lane
 
-`StaffLaneView` renders a treble staff in
-[PhraseLatticeKit](https://github.com/Muilyzz/PhraseLatticeKit)'s
+`StaffLaneView` renders a treble staff in `PhraseLatticeUI`'s
 `phraseFooter` slot — **one Canvas per phrase**, no per-note view identity.
 Time is lattice-linear (the lane shares the system's endpoints, so notes
 align 1:1 with the beats above); pitch placement is phenotype-driven.
@@ -65,6 +66,6 @@ the unfolded one. See `Examples/StaffLaneExample` for the runnable app.
 
 ## Family
 
-- [PhraseLatticeKit](https://github.com/Muilyzz/PhraseLatticeKit) — the time axis (this kit's only dependency)
-- [MediaAlignKit](https://github.com/Muilyzz/MediaAlignKit) — continuous ↔ discrete time conversion
+- [`PhraseLattice`](../Sources/PhraseLattice) — the time axis (this module's only dependency, besides its UI)
+- [`MediaAlign`](MediaAlign.md) — continuous ↔ discrete time conversion
 - [HarmonyPitch](https://github.com/Muilyzz/HarmonyKit) — the genotype world (notation-neutral by charter), a module of HarmonyKit

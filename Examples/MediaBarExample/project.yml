@@ -1,24 +1,21 @@
-name: StaffLaneExample
+name: MediaBarExample
 options:
   bundleIdPrefix: com.muilyzz
 packages:
-  StaffLatticeKit:
+  ScoreLatticeKit:
     path: ../..
-  PhraseLatticeKit:
-    url: https://github.com/Muilyzz/PhraseLatticeKit.git
-    from: 2.8.3
 targets:
-  StaffLaneExample:
+  MediaBarExample:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
     sources: [Sources]
     dependencies:
-      - package: StaffLatticeKit
-        product: StaffLattice
-      - package: PhraseLatticeKit
+      - package: ScoreLatticeKit
+        product: MediaAlign
+      - package: ScoreLatticeKit
         product: PhraseLattice
-      - package: PhraseLatticeKit
+      - package: ScoreLatticeKit
         product: PhraseLatticeUI
     settings:
       base:

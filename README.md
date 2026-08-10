@@ -1,16 +1,38 @@
-# PhraseLatticeKit
+# ScoreLatticeKit
 
-**A stateless segmentation coordinate system for musical scores.**
+**The score-plane coordinate system — both axes as pure math.**
 
-Zero dependencies. One module. Your document stays yours — adopt a
-seven-member protocol and reuse the whole policy → projection → cursor chain.
+Zero dependencies. One target per concept. Your document stays yours — adopt
+a seven-member protocol and reuse the whole policy → projection → cursor
+chain.
+
+|  | physical / raw | policy (the fold) | discrete / notated |
+|---|---|---|---|
+| **X — time** | media seconds | `TempoMap` · `MeterMap` · `ScorePhrasePolicy` | tick › beat › measure › phrase |
+| **Y — pitch** | MIDI genotype | `KeySpellingPolicy` (key signature) | `SpelledPitch` › staff step |
+
+Logical coordinates and folds only — px belongs to the UI layer.
 
 ```swift
-.package(path: "../PhraseLatticeKit"),          // or the git URL
-.product(name: "PhraseLattice", package: "PhraseLatticeKit"),
+.package(path: "../ScoreLatticeKit"),                         // or the git URL
+.product(name: "ScoreLattice", package: "ScoreLatticeKit"),   // umbrella
+// or the narrower leaves: PhraseLattice · MediaAlign · StaffLattice
 ```
 
-## The idea
+## Modules
+
+| Module | Axis | Owns |
+|---|---|---|
+| `PhraseLattice` | X | tick lattice (24 PPQ) · meter/tempo folds · phrase policy · structure projection · cursors |
+| [`MediaAlign`](Docs/MediaAlign.md) | X | the anchor ("tick 0 sits at media second X") and the bijection it induces |
+| [`StaffLattice`](Docs/StaffLattice.md) | Y | genotype → phenotype spelling · staff geometry · staff lane renderers |
+| `PhraseLatticeUI` | — | `LatticeGridView` — the slot-based SwiftUI grid |
+| `ScoreLattice` | X × Y | umbrella — `@_exported` re-export of the three leaves |
+
+Media and staff are opt-in refinements — the pure lattice never mentions
+them. The old repo boundary lives on as a target boundary.
+
+## The idea (X)
 
 Phrases are **not stored objects** — they are a projection:
 
@@ -25,6 +47,14 @@ So every tick belongs to exactly one phrase, nothing goes stale when the
 score grows, and meter changes are only legal at phrase starts (fold hinges).
 Visual line breaks (`SystemBreak`) are a separate, purely-layout concept —
 keeping the musical/visual break distinction explicit is a core design claim.
+
+## The idea (Y)
+
+Pitch itself is notation-neutral: a MIDI-like genotype has no opinion about
+♭ vs ♯. Determinism appears only when a **key signature** exists — its
+preference makes genotype → phenotype a 1:1 translation, and the staff reads
+the phenotype directly (`step = letter + 7 × octave`, no semitone math).
+See [Docs/StaffLattice.md](Docs/StaffLattice.md).
 
 ## Using it with *your* document
 
@@ -63,9 +93,12 @@ swift run demo
 prints the whole story — default grid, pin union, meter gating, cursor walk —
 in your terminal, no Xcode required.
 
-For the visual version, open `Examples/LatticeGridExample` (project included)
-and run it on an iOS simulator — toggle a phrase hinge and watch the grid
-re-fold live.
+For the visual versions, open one of the included example projects and run it
+on an iOS simulator:
+
+- `Examples/LatticeGridExample` — toggle a phrase hinge, watch the grid re-fold.
+- `Examples/MediaBarExample` — per-phrase media strips via the `phraseHeader` slot.
+- `Examples/StaffLaneExample` — a grand staff in the `phraseFooter` lane.
 
 ## Rendering: layout is the product, content is injected
 
@@ -104,16 +137,7 @@ Grid laws the renderer owns (everything else is a slot):
   so time-linear header decorations (media strips, rulers) align 1:1 with
   the beats below.
 
-## Media lives above, not here
-
-This kit is purely the discrete conceptual world. Time on the lattice is what
-a musician *thinks*; wall-clock time — a song running parallel to the score —
-belongs to the extension pack
-**[MediaAlignKit](https://github.com/Muilyzz/MediaAlignKit)**, which layers
-the media concept and the continuous ↔ discrete conversion math on top of
-this kit's seam.
-
-## Contents
+## PhraseLattice contents
 
 | Where | What |
 |---|---|
@@ -121,6 +145,11 @@ this kit's seam.
 | `Phrase/` | `PhraseBoundary` · `SystemBreak` · `ScorePhrasePolicy` |
 | `Seam/` | `ScoreStructureSource` — the seven-member host contract |
 | `Projection/` | `ScoreStructureIndex` (Score › Phrase › Measure › Beat spans) · logical & geometric cursors |
-| `PhraseLatticeUI` | `LatticeGridView` — slot-based SwiftUI grid |
 
 Tests double as living documentation — see `Tests/PhraseLatticeTests/SeamExampleTests.swift`.
+
+## Lineage
+
+Merged 2026-08-11 from three repos — **PhraseLatticeKit 2.x** (this repo,
+renamed), **MediaAlignKit**, **StaffLatticeKit** — histories subtree-merged,
+module names unchanged.

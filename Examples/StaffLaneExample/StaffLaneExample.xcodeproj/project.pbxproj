@@ -15,7 +15,7 @@
 
 /* Begin PBXFileReference section */
 		21E3187FC4C1AE2FF53E4701 /* StaffLaneExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StaffLaneExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		54BEF7FE6EA4C56727996670 /* StaffLatticeKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = StaffLatticeKit; path = ../..; sourceTree = SOURCE_ROOT; };
+		B841A955D2274C68473B0997 /* ScoreLatticeKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ScoreLatticeKit; path = ../..; sourceTree = SOURCE_ROOT; };
 		C84A18B435E2733917C6A2C9 /* StaffLaneExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffLaneExampleApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -36,7 +36,7 @@
 		246B676F7403A8C2FCD28D3E /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				54BEF7FE6EA4C56727996670 /* StaffLatticeKit */,
+				B841A955D2274C68473B0997 /* ScoreLatticeKit */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -111,7 +111,6 @@
 			mainGroup = E61F9007DD921331A2BEB2CE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				5E20556E3FCF979E41ACF927 /* XCRemoteSwiftPackageReference "PhraseLatticeKit" */,
 				480880B05EA9CFAE3D263448 /* XCLocalSwiftPackageReference "../.." */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -321,26 +320,13 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		5E20556E3FCF979E41ACF927 /* XCRemoteSwiftPackageReference "PhraseLatticeKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Muilyzz/PhraseLatticeKit.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.8.3;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
 		412564334EB813EEDA24F5F8 /* PhraseLattice */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5E20556E3FCF979E41ACF927 /* XCRemoteSwiftPackageReference "PhraseLatticeKit" */;
 			productName = PhraseLattice;
 		};
 		CB53B4EE7BF3653A38AA90CD /* PhraseLatticeUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5E20556E3FCF979E41ACF927 /* XCRemoteSwiftPackageReference "PhraseLatticeKit" */;
 			productName = PhraseLatticeUI;
 		};
 		D6D4DD55C404E5A2945AD52B /* StaffLattice */ = {

@@ -1,23 +1,21 @@
-name: MediaBarExample
+name: StaffLaneExample
 options:
   bundleIdPrefix: com.muilyzz
 packages:
-  MediaAlignKit:
+  ScoreLatticeKit:
     path: ../..
-  PhraseLatticeKit:
-    path: ../../../PhraseLatticeKit
 targets:
-  MediaBarExample:
+  StaffLaneExample:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
     sources: [Sources]
     dependencies:
-      - package: MediaAlignKit
-        product: MediaAlign
-      - package: PhraseLatticeKit
+      - package: ScoreLatticeKit
+        product: StaffLattice
+      - package: ScoreLatticeKit
         product: PhraseLattice
-      - package: PhraseLatticeKit
+      - package: ScoreLatticeKit
         product: PhraseLatticeUI
     settings:
       base:

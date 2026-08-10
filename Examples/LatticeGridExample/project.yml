@@ -2,7 +2,7 @@ name: LatticeGridExample
 options:
   bundleIdPrefix: com.muilyzz
 packages:
-  PhraseLatticeKit:
+  ScoreLatticeKit:
     path: ../..
 targets:
   LatticeGridExample:
@@ -11,9 +11,9 @@ targets:
     deploymentTarget: "17.0"
     sources: [Sources]
     dependencies:
-      - package: PhraseLatticeKit
+      - package: ScoreLatticeKit
         product: PhraseLattice
-      - package: PhraseLatticeKit
+      - package: ScoreLatticeKit
         product: PhraseLatticeUI
     settings:
       base:

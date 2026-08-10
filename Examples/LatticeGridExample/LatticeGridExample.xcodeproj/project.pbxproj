@@ -13,8 +13,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		27546B5AB5B375ED00F3B6F4 /* PhraseLatticeKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PhraseLatticeKit; path = ../..; sourceTree = SOURCE_ROOT; };
 		801AECFD91C75CBEAE16D0F6 /* LatticeGridExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatticeGridExampleApp.swift; sourceTree = "<group>"; };
+		A0CDA35A503DBBD39D5300F1 /* ScoreLatticeKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ScoreLatticeKit; path = ../..; sourceTree = SOURCE_ROOT; };
 		A80EF6761D0FD07E27B9ABA3 /* LatticeGridExample.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LatticeGridExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -51,7 +51,7 @@
 		9FD31C8D9E9DE95E99E199B5 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				27546B5AB5B375ED00F3B6F4 /* PhraseLatticeKit */,
+				A0CDA35A503DBBD39D5300F1 /* ScoreLatticeKit */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
