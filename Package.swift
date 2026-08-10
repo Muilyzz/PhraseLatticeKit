@@ -20,7 +20,7 @@ let package = Package(
         .library(name: "MediaAlign", targets: ["MediaAlign"]),
     ],
     dependencies: [
-        .package(path: "../PhraseLatticeKit"),
+        .package(url: "https://github.com/Muilyzz/PhraseLatticeKit.git", from: "1.0.0"),
     ],
     targets: [
         .target(
