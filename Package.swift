@@ -20,7 +20,7 @@ let package = Package(
         .library(name: "StaffLattice", targets: ["StaffLattice"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Muilyzz/PhraseLatticeKit.git", from: "2.7.0"),
+        .package(url: "https://github.com/Muilyzz/PhraseLatticeKit.git", from: "2.8.1"),
     ],
     targets: [
         .target(

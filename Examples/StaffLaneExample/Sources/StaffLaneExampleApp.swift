@@ -3,44 +3,41 @@ import PhraseLatticeUI
 import StaffLattice
 import SwiftUI
 
-/// Genotypes on the lattice → phenotypes on a staff, in the grid's footer
-/// lane. D major: watch F♯→F♮ and C♯→C♮ take a natural glyph (never a
-/// flat), and chromatic G♯ take the sharp family.
+/// The top gutter holds the **selectors** (meter and key signature); the
+/// left gutter holds the **glyphs** (clef and meter). Change the key — the
+/// same genotypes respell live. Change the meter — the lattice refolds.
 struct MelodySheet: ScoreStructureSource {
     let id = UUID()
     var title = "Staff lane"
     var durationTicks = 8 * 96
-    var meterMap = MeterMap(events: [
-        MeterEvent(tick: 0, signature: MeterSignature(numerator: 4, denominator: 4)),
-    ])
+    var meter: MeterSignature
+    var meterMap: MeterMap { MeterMap(events: [MeterEvent(tick: 0, signature: meter)]) }
     var pickupTicks: Int { 0 }
     var phraseBoundaries: [PhraseBoundary] { [] }
-
-    let signature = KeySignature(fifths: 2)
-
-    let melody: [StaffNote] = [
-        .init(tick: 0, midi: 62), .init(tick: 24, midi: 66),
-        .init(tick: 48, midi: 69), .init(tick: 72, midi: 74),
-        .init(tick: 96, midi: 67), .init(tick: 120, midi: 66),
-        .init(tick: 144, midi: 65), .init(tick: 168, midi: 64),
-        .init(tick: 192, midi: 73), .init(tick: 216, midi: 72),
-        .init(tick: 240, midi: 71), .init(tick: 264, midi: 69),
-        .init(tick: 288, midi: 68), .init(tick: 312, midi: 67),
-        .init(tick: 336, midi: 64), .init(tick: 360, midi: 60),
-        .init(tick: 384, midi: 62), .init(tick: 408, midi: 66),
-        .init(tick: 432, midi: 69), .init(tick: 456, midi: 74),
-        .init(tick: 480, midi: 72), .init(tick: 504, midi: 71),
-        .init(tick: 528, midi: 69), .init(tick: 552, midi: 67),
-        .init(tick: 576, midi: 66), .init(tick: 600, midi: 65),
-        .init(tick: 624, midi: 66), .init(tick: 648, midi: 69),
-        .init(tick: 672, midi: 67), .init(tick: 696, midi: 66),
-        .init(tick: 720, midi: 64), .init(tick: 744, midi: 62),
-    ]
 
     func bar(containing tick: ScoreTick) throws -> DerivedBar? {
         try meterMap.bar(containing: tick, pickupTicks: pickupTicks)
     }
 }
+
+let melody: [StaffNote] = [
+    .init(tick: 0, midi: 62), .init(tick: 24, midi: 66),
+    .init(tick: 48, midi: 69), .init(tick: 72, midi: 74),
+    .init(tick: 96, midi: 67), .init(tick: 120, midi: 66),
+    .init(tick: 144, midi: 65), .init(tick: 168, midi: 64),
+    .init(tick: 192, midi: 73), .init(tick: 216, midi: 72),
+    .init(tick: 240, midi: 71), .init(tick: 264, midi: 69),
+    .init(tick: 288, midi: 68), .init(tick: 312, midi: 67),
+    .init(tick: 336, midi: 64), .init(tick: 360, midi: 60),
+    .init(tick: 384, midi: 62), .init(tick: 408, midi: 66),
+    .init(tick: 432, midi: 69), .init(tick: 456, midi: 74),
+    .init(tick: 480, midi: 72), .init(tick: 504, midi: 71),
+    .init(tick: 528, midi: 69), .init(tick: 552, midi: 67),
+    .init(tick: 576, midi: 66), .init(tick: 600, midi: 65),
+    .init(tick: 624, midi: 66), .init(tick: 648, midi: 69),
+    .init(tick: 672, midi: 67), .init(tick: 696, midi: 66),
+    .init(tick: 720, midi: 64), .init(tick: 744, midi: 62),
+]
 
 @main
 struct StaffLaneExampleApp: App {
@@ -50,26 +47,53 @@ struct StaffLaneExampleApp: App {
 }
 
 struct ContentView: View {
-    private let sheet = MelodySheet()
+    @State private var fifths = 2
+    @State private var beatsPerBar = 4
     @State private var selection: ScoreStructureSpan?
+
+    private let staffHeight: CGFloat = 116
+
+    private var signature: KeySignature { KeySignature(fifths: fifths) }
+    private var sheet: MelodySheet {
+        MelodySheet(meter: MeterSignature(numerator: beatsPerBar, denominator: 4))
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("D major (♯2) — F♮ and C♮ cancel the signature; G♯ follows the family")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    LatticeGridView(source: sheet, selection: $selection) { beat in
+                VStack(alignment: .leading, spacing: 12) {
+                    // Top gutter: the selectors.
+                    HStack(spacing: 12) {
+                        Picker("Meter", selection: $beatsPerBar) {
+                            Text("4/4").tag(4)
+                            Text("2/4").tag(2)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 150)
+                        Stepper(
+                            value: $fifths, in: -7...7
+                        ) {
+                            Text(fifths >= 0 ? "♯\(fifths)" : "♭\(-fifths)")
+                                .font(.callout.monospacedDigit().weight(.semibold))
+                        }
+                    }
+
+                    LatticeGridView(
+                        source: sheet,
+                        selection: $selection,
+                        gutterWidth: 40
+                    ) { beat in
                         Text(beat.ordinal.map(String.init) ?? "·")
                     } phraseFooter: { phrase in
                         StaffLaneView(
                             phrase: phrase,
-                            notes: sheet.melody,
-                            signature: sheet.signature
+                            notes: melody,
+                            signature: signature
                         )
-                        .frame(height: 120)
+                        .frame(height: staffHeight)
                         .padding(.top, 2)
+                    } phraseGutter: { _ in
+                        StaffGutterView(meter: sheet.meter, staffLaneHeight: staffHeight)
                     }
                 }
                 .padding()
