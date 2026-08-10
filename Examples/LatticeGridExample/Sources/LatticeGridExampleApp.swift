@@ -60,6 +60,8 @@ struct ContentView: View {
                 arrow("arrow.down", .down)
                 Spacer()
                 Text(selection?.label ?? "nothing selected")
+                    .lineLimit(1)
+                    .fixedSize()
                     .font(.callout.weight(.medium))
                     .foregroundStyle(.secondary)
             }
