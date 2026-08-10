@@ -99,6 +99,10 @@ Grid laws the renderer owns (everything else is a slot):
   heavier lines for higher boundaries, opening and closing each system.
 - **Text law** — cell font size derives from `beatWidth`; content may shrink
   but never truncates ("…") or wraps.
+- **Header shares the system's endpoints** — the phrase header is pinned to
+  exactly the system row's width. Time density is uniform inside a phrase,
+  so time-linear header decorations (media strips, rulers) align 1:1 with
+  the beats below.
 
 ## Media lives above, not here
 

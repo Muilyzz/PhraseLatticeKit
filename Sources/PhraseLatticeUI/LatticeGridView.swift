@@ -179,6 +179,11 @@ public struct LatticeGridView<
     }
 
     @State private var gridWidth: CGFloat = 0
+    /// Measured width of each phrase's system row — the phrase header is
+    /// pinned to exactly this width so header decorations (e.g. media
+    /// strips) share the system's endpoints: uniform time density inside a
+    /// phrase makes that a 1:1 linear alignment with the beats below.
+    @State private var systemWidths: [String: CGFloat] = [:]
 
     /// One phrase = one line, always. If no explicit beatWidth is given it is
     /// **derived from the available width and the widest phrase**, so cells
@@ -206,6 +211,7 @@ public struct LatticeGridView<
             ForEach(rows, id: \.phrase.id) { row in
                 VStack(alignment: .leading, spacing: 4) {
                     phraseHeader(row.phrase)
+                        .frame(width: systemWidths[row.phrase.id], alignment: .leading)
                     HStack(spacing: 0) {
                         ForEach(row.measures.indices, id: \.self) { index in
                             measureCell(row, index: index)
@@ -213,6 +219,15 @@ public struct LatticeGridView<
                         barlines.barline(at: .phrase)
                     }
                     .fixedSize(horizontal: false, vertical: true)
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear { systemWidths[row.phrase.id] = geo.size.width }
+                                .onChange(of: geo.size.width) { _, newWidth in
+                                    systemWidths[row.phrase.id] = newWidth
+                                }
+                        }
+                    )
                 }
                 .padding(6)
                 .background(
