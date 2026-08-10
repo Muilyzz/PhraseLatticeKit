@@ -110,6 +110,11 @@ public struct DefaultMeasureBox<BeatCell: View, Bars: BarlineProvider>: View {
     public let context: LatticeMeasureContext
     public let beats: MeasureBeatsRow<BeatCell, Bars>
 
+    public init(context: LatticeMeasureContext, beats: MeasureBeatsRow<BeatCell, Bars>) {
+        self.context = context
+        self.beats = beats
+    }
+
     public var body: some View {
         // Flush by law: whitespace only exists at the phrase level. Measure
         // boundaries are carried by barlines, not gaps or boxes.
@@ -523,6 +528,35 @@ where
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
             phraseHeader: { DefaultPhraseHeader(phrase: $0) },
+            phraseFooter: phraseFooter,
+            phraseGutter: phraseGutter
+        )
+    }
+}
+
+extension LatticeGridView
+where MeasureBox == DefaultMeasureBox<BeatCell, Bars>, Bars == DefaultBarlineProvider {
+    /// Custom beat cells, phrase header, footer lane, and leading gutter;
+    /// default measures and barlines.
+    public init(
+        source: some ScoreStructureSource,
+        selection: Binding<ScoreStructureSpan?> = .constant(nil),
+        beatWidth: CGFloat? = nil,
+        gutterWidth: CGFloat = 0,
+        @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
+        @ViewBuilder phraseHeader: @escaping (ScoreStructureSpan) -> PhraseHeader,
+        @ViewBuilder phraseFooter: @escaping (ScoreStructureSpan) -> PhraseFooter,
+        @ViewBuilder phraseGutter: @escaping (ScoreStructureSpan) -> PhraseGutter
+    ) {
+        self.init(
+            source: source,
+            selection: selection,
+            beatWidth: beatWidth,
+            gutterWidth: gutterWidth,
+            barlines: DefaultBarlineProvider(),
+            beat: beat,
+            measure: { DefaultMeasureBox(context: $0, beats: $1) },
+            phraseHeader: phraseHeader,
             phraseFooter: phraseFooter,
             phraseGutter: phraseGutter
         )
