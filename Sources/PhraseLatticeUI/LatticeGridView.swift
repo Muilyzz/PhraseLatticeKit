@@ -247,9 +247,12 @@ public struct LatticeGridView<
     public var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             ForEach(rows, id: \.phrase.id) { row in
-                HStack(alignment: .top, spacing: 0) {
+                // Gutter aligns to the row's bottom — the footer lane is the
+                // last lane, so front matter (a clef sized to the staff lane)
+                // lines up with it by construction.
+                HStack(alignment: .bottom, spacing: 0) {
                     phraseGutter(row.phrase)
-                        .frame(width: gutterWidth > 0 ? gutterWidth : nil, alignment: .topLeading)
+                        .frame(width: gutterWidth > 0 ? gutterWidth : nil, alignment: .bottomLeading)
                     VStack(alignment: .leading, spacing: 4) {
                     phraseHeader(row.phrase)
                         .frame(width: systemWidths[row.phrase.id], alignment: .leading)
