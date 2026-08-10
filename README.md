@@ -43,11 +43,36 @@ Fold any source-specific corrections into `downbeatTimeSeconds` **before**
 constructing `MediaAnchor` — the kit receives one effective number and asks
 no questions.
 
+## The media *concept* also lives here
+
+The lattice's base contract never mentions media. If your score runs parallel
+to a song, adopt the opt-in refinement and describe the media only by its
+traits — offset, extent, inspectability:
+
+```swift
+extension MyDocument: ScoreMediaLinkedSource {
+    var linkedMedia: ScoreLinkedMedia? {
+        ScoreLinkedMedia(
+            downbeatOffsetMilliseconds: 1200,   // media starts before the score
+            durationMilliseconds: 210_000,
+            isInspectable: false                // e.g. a DRM stream
+        )
+    }
+}
+```
+
+The decorated projection (`ScoreStructureIndex.phraseSpans` overload from this
+kit) then prepends the ordinal-0 lead-in marker — the lattice itself stays
+media-free.
+
 ## Contents
 
+- `ScoreLinkedMedia` / `ScoreMediaLinkedSource` — the media *concept* and the
+  opt-in host contract.
 - `MediaAnchor` — the single joining fact, plus the pure ± shift.
 - `MediaTimeMap` — anchor + `TempoMap` → strict continuous conversions and
   nearest-tick convenience.
+- `MediaAwareProjection` — the lead-in decoration over the base projection.
 
 Tests are deterministic assertions on the mapping — see
 `Tests/MediaAlignTests/MediaTimeMapTests.swift`.
