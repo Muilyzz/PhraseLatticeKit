@@ -30,14 +30,16 @@ public struct StaffGutterView: View {
             )
             let clefX = size.width * 0.30
 
-            // Clefs, anchored to their reference lines.
+            // Clefs, anchored by the pictorial rules: the treble curl wraps
+            // the G4 line; the bass clef's two dots straddle the F3 line.
+            // Offsets calibrated for the system font's glyph metrics.
             context.draw(
                 Text("𝄞").font(.system(size: half * 9.5)),
-                at: CGPoint(x: clefX, y: y(StaffGeometry.trebleClefAnchorStep) - half * 0.4)
+                at: CGPoint(x: clefX, y: y(StaffGeometry.trebleClefAnchorStep) - half * 0.75)
             )
             context.draw(
-                Text("𝄢").font(.system(size: half * 6.0)),
-                at: CGPoint(x: clefX, y: y(StaffGeometry.bassClefAnchorStep) + half * 0.4)
+                Text("𝄢").font(.system(size: half * 5.2)),
+                at: CGPoint(x: clefX, y: y(StaffGeometry.bassClefAnchorStep) + half * 1.45)
             )
 
             // Stacked meter fractions on both staves.

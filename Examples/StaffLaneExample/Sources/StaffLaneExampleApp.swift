@@ -104,20 +104,9 @@ struct ContentView: View {
                         ) { beat in
                             Text(beat.ordinal.map(String.init) ?? "·")
                         } phraseHeader: { phrase in
-                            // Chord-score side: horizontal meter notation,
-                            // editable, on every phrase (the hinge rule).
-                            HStack(spacing: 8) {
-                                Text(phrase.label)
-                                    .font(.caption.weight(.medium))
-                                    .foregroundStyle(.secondary)
-                                Menu {
-                                    Button("4/4") { meterBinding(for: phrase).wrappedValue = 4 }
-                                    Button("2/4") { meterBinding(for: phrase).wrappedValue = 2 }
-                                } label: {
-                                    Text("\(sheet.meter(at: phrase.range.startTick).numerator)/4 ▾")
-                                        .font(.caption.monospacedDigit().weight(.semibold))
-                                }
-                            }
+                            Text(phrase.label)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
                         } phraseFooter: { phrase in
                             StaffLaneView(
                                 phrase: phrase,
@@ -127,10 +116,22 @@ struct ContentView: View {
                             .frame(height: staffHeight)
                             .padding(.top, 2)
                         } phraseGutter: { phrase in
-                            StaffGutterView(
-                                meter: sheet.meter(at: phrase.range.startTick),
-                                staffLaneHeight: staffHeight
-                            )
+                            // The editable horizontal meter lives in the
+                            // gutter's upper space — left of the opening
+                            // barline, at the chord-score row's level.
+                            VStack(alignment: .leading, spacing: 6) {
+                                Menu {
+                                    Button("4/4") { meterBinding(for: phrase).wrappedValue = 4 }
+                                    Button("2/4") { meterBinding(for: phrase).wrappedValue = 2 }
+                                } label: {
+                                    Text("\(sheet.meter(at: phrase.range.startTick).numerator)/4")
+                                        .font(.caption.monospacedDigit().weight(.semibold))
+                                }
+                                StaffGutterView(
+                                    meter: sheet.meter(at: phrase.range.startTick),
+                                    staffLaneHeight: staffHeight
+                                )
+                            }
                         }
                     }
                     .padding()
