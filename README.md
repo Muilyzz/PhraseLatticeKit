@@ -83,9 +83,18 @@ LatticeGridView(source: myDocument, selection: $selection) { beat in
 }
 ```
 
-Grid law: **same time = same width** — every beat gets `beatWidth` points and
-measures soft-wrap onto new lines, so a one-bar phrase draws narrow instead of
-stretching. Everything visual beyond the fold is a slot.
+Grid laws the renderer owns (everything else is a slot):
+
+- **Same time = same width** — every beat gets `beatWidth` points; a one-bar
+  phrase draws narrow instead of stretching.
+- **Binary-fold wrap** — an overflowing phrase folds in half (4 → 2+2, never
+  3+1): a wrap point reads as a musical signal, so it must stay musically
+  even. `SystemBreak` pins are the host override.
+- **Boundary-weighted barlines** — `BarlineProvider` generates dividers by
+  boundary rank (phrase › measure › beat); `DefaultBarlineProvider` draws
+  heavier lines for higher boundaries.
+- **Text law** — cell font size derives from `beatWidth`; content may shrink
+  but never truncates ("…") or wraps.
 
 ## Media lives above, not here
 
