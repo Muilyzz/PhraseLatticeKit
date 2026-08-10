@@ -67,4 +67,4 @@ the unfolded one. See `Examples/StaffLaneExample` for the runnable app.
 
 - [PhraseLatticeKit](https://github.com/Muilyzz/PhraseLatticeKit) — the time axis (this kit's only dependency)
 - [MediaAlignKit](https://github.com/Muilyzz/MediaAlignKit) — continuous ↔ discrete time conversion
-- [PitchKit](https://github.com/Muilyzz/PitchKit) — the genotype world (notation-neutral by charter)
+- [HarmonyPitch](https://github.com/Muilyzz/HarmonyKit) — the genotype world (notation-neutral by charter), a module of HarmonyKit
