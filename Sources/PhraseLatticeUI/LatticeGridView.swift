@@ -138,6 +138,7 @@ public struct LatticeGridView<
     BeatCell: View,
     MeasureBox: View,
     PhraseHeader: View,
+    PhraseFooter: View,
     Bars: BarlineProvider
 >: View {
     private struct PhraseRow {
@@ -152,6 +153,7 @@ public struct LatticeGridView<
     private let beatCell: (ScoreStructureSpan) -> BeatCell
     private let measureBox: (LatticeMeasureContext, MeasureBeatsRow<BeatCell, Bars>) -> MeasureBox
     private let phraseHeader: (ScoreStructureSpan) -> PhraseHeader
+    private let phraseFooter: (ScoreStructureSpan) -> PhraseFooter
 
     public init(
         source: some ScoreStructureSource,
@@ -160,7 +162,8 @@ public struct LatticeGridView<
         barlines: Bars,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
         @ViewBuilder measure: @escaping (LatticeMeasureContext, MeasureBeatsRow<BeatCell, Bars>) -> MeasureBox,
-        @ViewBuilder phraseHeader: @escaping (ScoreStructureSpan) -> PhraseHeader
+        @ViewBuilder phraseHeader: @escaping (ScoreStructureSpan) -> PhraseHeader,
+        @ViewBuilder phraseFooter: @escaping (ScoreStructureSpan) -> PhraseFooter
     ) {
         self.rows = ScoreStructureIndex.phraseSpans(in: source).map { phrase in
             PhraseRow(
@@ -176,6 +179,7 @@ public struct LatticeGridView<
         self.beatCell = beat
         self.measureBox = measure
         self.phraseHeader = phraseHeader
+        self.phraseFooter = phraseFooter
     }
 
     @State private var gridWidth: CGFloat = 0
@@ -251,6 +255,8 @@ public struct LatticeGridView<
                                 }
                         }
                     )
+                    phraseFooter(row.phrase)
+                        .frame(width: systemWidths[row.phrase.id], alignment: .leading)
                 }
                 .padding(6)
                 .background(
@@ -302,6 +308,7 @@ extension LatticeGridView
 where
     MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
     PhraseHeader == DefaultPhraseHeader,
+    PhraseFooter == EmptyView,
     Bars == DefaultBarlineProvider
 {
     /// Custom beat cells; everything else default.
@@ -318,13 +325,18 @@ where
             barlines: DefaultBarlineProvider(),
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
-            phraseHeader: { DefaultPhraseHeader(phrase: $0) }
+            phraseHeader: { DefaultPhraseHeader(phrase: $0) },
+            phraseFooter: { _ in EmptyView() }
         )
     }
 }
 
 extension LatticeGridView
-where MeasureBox == DefaultMeasureBox<BeatCell, Bars>, Bars == DefaultBarlineProvider {
+where
+    MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
+    PhraseFooter == EmptyView,
+    Bars == DefaultBarlineProvider
+{
     /// Custom beat cells and phrase headers; default measures and barlines.
     public init(
         source: some ScoreStructureSource,
@@ -340,13 +352,18 @@ where MeasureBox == DefaultMeasureBox<BeatCell, Bars>, Bars == DefaultBarlinePro
             barlines: DefaultBarlineProvider(),
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
-            phraseHeader: phraseHeader
+            phraseHeader: phraseHeader,
+            phraseFooter: { _ in EmptyView() }
         )
     }
 }
 
 extension LatticeGridView
-where PhraseHeader == DefaultPhraseHeader, Bars == DefaultBarlineProvider {
+where
+    PhraseHeader == DefaultPhraseHeader,
+    PhraseFooter == EmptyView,
+    Bars == DefaultBarlineProvider
+{
     /// Custom beat cells and measure boxes; default headers and barlines.
     public init(
         source: some ScoreStructureSource,
@@ -362,7 +379,8 @@ where PhraseHeader == DefaultPhraseHeader, Bars == DefaultBarlineProvider {
             barlines: DefaultBarlineProvider(),
             beat: beat,
             measure: measure,
-            phraseHeader: { DefaultPhraseHeader(phrase: $0) }
+            phraseHeader: { DefaultPhraseHeader(phrase: $0) },
+            phraseFooter: { _ in EmptyView() }
         )
     }
 }
@@ -370,7 +388,8 @@ where PhraseHeader == DefaultPhraseHeader, Bars == DefaultBarlineProvider {
 extension LatticeGridView
 where
     MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
-    PhraseHeader == DefaultPhraseHeader
+    PhraseHeader == DefaultPhraseHeader,
+    PhraseFooter == EmptyView
 {
     /// Custom beat cells and barline provider; default measures and headers.
     public init(
@@ -387,7 +406,8 @@ where
             barlines: barlines,
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
-            phraseHeader: { DefaultPhraseHeader(phrase: $0) }
+            phraseHeader: { DefaultPhraseHeader(phrase: $0) },
+            phraseFooter: { _ in EmptyView() }
         )
     }
 }
@@ -418,3 +438,32 @@ private struct PreviewSheet: ScoreStructureSource {
     }
 }
 #endif
+
+extension LatticeGridView
+where
+    MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
+    PhraseHeader == DefaultPhraseHeader,
+    Bars == DefaultBarlineProvider
+{
+    /// Custom beat cells and a phrase footer lane; everything else default.
+    /// The footer shares the system's endpoints (grid law), so time-linear
+    /// content — pitch contours, rulers — aligns 1:1 with the beats above.
+    public init(
+        source: some ScoreStructureSource,
+        selection: Binding<ScoreStructureSpan?> = .constant(nil),
+        beatWidth: CGFloat? = nil,
+        @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
+        @ViewBuilder phraseFooter: @escaping (ScoreStructureSpan) -> PhraseFooter
+    ) {
+        self.init(
+            source: source,
+            selection: selection,
+            beatWidth: beatWidth,
+            barlines: DefaultBarlineProvider(),
+            beat: beat,
+            measure: { DefaultMeasureBox(context: $0, beats: $1) },
+            phraseHeader: { DefaultPhraseHeader(phrase: $0) },
+            phraseFooter: phraseFooter
+        )
+    }
+}
