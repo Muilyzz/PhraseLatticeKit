@@ -154,7 +154,7 @@ public struct LatticeGridView<
     }
 
     private let rows: [PhraseRow]
-    private let beatWidth: CGFloat
+    private let explicitBeatWidth: CGFloat?
     private let barlines: Bars
     @Binding private var selection: ScoreStructureSpan?
     private let beatCell: (ScoreStructureSpan) -> BeatCell
@@ -164,7 +164,7 @@ public struct LatticeGridView<
     public init(
         source: some ScoreStructureSource,
         selection: Binding<ScoreStructureSpan?> = .constant(nil),
-        beatWidth: CGFloat = 20,
+        beatWidth: CGFloat? = nil,
         barlines: Bars,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
         @ViewBuilder measure: @escaping (LatticeMeasureContext, MeasureBeatsRow<BeatCell, Bars>) -> MeasureBox,
@@ -178,7 +178,7 @@ public struct LatticeGridView<
                 }
             )
         }
-        self.beatWidth = beatWidth
+        self.explicitBeatWidth = beatWidth
         self.barlines = barlines
         self._selection = selection
         self.beatCell = beat
@@ -188,18 +188,36 @@ public struct LatticeGridView<
 
     @State private var gridWidth: CGFloat = 0
 
+    /// One phrase = one line, always. If no explicit beatWidth is given it is
+    /// **derived from the available width and the widest phrase**, so cells
+    /// (and their computed font) shrink rather than the phrase wrapping.
+    private var resolvedBeatWidth: CGFloat {
+        if let explicitBeatWidth { return explicitBeatWidth }
+        let widest = rows.map { row -> (beats: Int, measures: Int) in
+            let beats = row.measures.reduce(0) { $0 + $1.beats.count }
+            return (beats, row.measures.count)
+        }
+        .max { $0.beats < $1.beats }
+        guard let widest, widest.beats > 0, gridWidth > 0 else { return 20 }
+        // Estimated non-cell overhead: measure padding + leading barlines,
+        // inter-measure spacing, inner beat barlines, plus slack for the
+        // phrase row padding and estimate error.
+        let overhead = CGFloat(widest.measures) * 6
+            + CGFloat(max(widest.measures - 1, 0)) * 8
+            + CGFloat(max(widest.beats - widest.measures, 0)) * 0.5
+            + 20
+        let width = (gridWidth - overhead) / CGFloat(widest.beats)
+        return max(8, width.rounded(.down))
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             ForEach(rows, id: \.phrase.id) { row in
                 VStack(alignment: .leading, spacing: 4) {
                     phraseHeader(row.phrase)
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(measureRowPartition(row), id: \.self) { indices in
-                            HStack(spacing: 8) {
-                                ForEach(indices, id: \.self) { index in
-                                    measureCell(row, index: index)
-                                }
-                            }
+                    HStack(spacing: 8) {
+                        ForEach(row.measures.indices, id: \.self) { index in
+                            measureCell(row, index: index)
                         }
                     }
                 }
@@ -237,51 +255,13 @@ public struct LatticeGridView<
             context,
             MeasureBeatsRow(
                 beats: group.beats,
-                beatWidth: beatWidth,
+                beatWidth: resolvedBeatWidth,
                 leadingBoundary: context.leadingBoundary,
                 barlines: barlines,
                 selection: $selection,
                 beatCell: beatCell
             )
         )
-    }
-
-    /// Wraps measures by **binary fold**, not greedy flow: a wrap point reads
-    /// as a musical signal, and a 4-measure phrase wrapped 3+1 visually lies
-    /// about its hypermeter. When a phrase overflows, it folds in half —
-    /// 4 becomes 2+2, 8 becomes 4+4 — so every line stays a legible musical
-    /// unit. Explicit ``SystemBreak`` pins remain the host-side override for
-    /// hand-chosen wrap points.
-    ///
-    /// Width is estimated from beat counts (meter changes only sit at phrase
-    /// starts, so measures within one phrase share a beat count).
-    private func measureRowPartition(_ row: PhraseRow) -> [[Int]] {
-        let count = row.measures.count
-        guard count > 0 else { return [] }
-        let beatsPerMeasure = row.measures[0].beats.count
-        let estimatedWidth = CGFloat(beatsPerMeasure) * beatWidth + 8
-        let available = max(gridWidth - 12, estimatedWidth)
-        let fit = max(1, Int((available + 8) / (estimatedWidth + 8)))
-
-        var sizes: [Int] = []
-        func fold(_ n: Int) {
-            if n <= fit {
-                sizes.append(n)
-                return
-            }
-            let half = (n + 1) / 2
-            fold(half)
-            fold(n - half)
-        }
-        fold(count)
-
-        var partition: [[Int]] = []
-        var start = 0
-        for size in sizes {
-            partition.append(Array(start..<(start + size)))
-            start += size
-        }
-        return partition
     }
 }
 
@@ -297,7 +277,7 @@ where
     public init(
         source: some ScoreStructureSource,
         selection: Binding<ScoreStructureSpan?> = .constant(nil),
-        beatWidth: CGFloat = 20,
+        beatWidth: CGFloat? = nil,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell
     ) {
         self.init(
@@ -318,7 +298,7 @@ where MeasureBox == DefaultMeasureBox<BeatCell, Bars>, Bars == DefaultBarlinePro
     public init(
         source: some ScoreStructureSource,
         selection: Binding<ScoreStructureSpan?> = .constant(nil),
-        beatWidth: CGFloat = 20,
+        beatWidth: CGFloat? = nil,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
         @ViewBuilder phraseHeader: @escaping (ScoreStructureSpan) -> PhraseHeader
     ) {
@@ -340,7 +320,7 @@ where PhraseHeader == DefaultPhraseHeader, Bars == DefaultBarlineProvider {
     public init(
         source: some ScoreStructureSource,
         selection: Binding<ScoreStructureSpan?> = .constant(nil),
-        beatWidth: CGFloat = 20,
+        beatWidth: CGFloat? = nil,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
         @ViewBuilder measure: @escaping (LatticeMeasureContext, MeasureBeatsRow<BeatCell, Bars>) -> MeasureBox
     ) {
@@ -365,7 +345,7 @@ where
     public init(
         source: some ScoreStructureSource,
         selection: Binding<ScoreStructureSpan?> = .constant(nil),
-        beatWidth: CGFloat = 20,
+        beatWidth: CGFloat? = nil,
         barlines: Bars,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell
     ) {
