@@ -1,0 +1,15 @@
+{
+  "originHash" : "0f1c862521a13169bd3420bbbc74b1951a568a7af252767e53836eed39fc0399",
+  "pins" : [
+    {
+      "identity" : "phraselatticekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Muilyzz/PhraseLatticeKit.git",
+      "state" : {
+        "revision" : "2ff66225970b744ef0464b7f5bb56d1265dad356",
+        "version" : "2.7.0"
+      }
+    }
+  ],
+  "version" : 3
+}

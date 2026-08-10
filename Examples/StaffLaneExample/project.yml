@@ -1,0 +1,27 @@
+name: StaffLaneExample
+options:
+  bundleIdPrefix: com.muilyzz
+packages:
+  StaffLatticeKit:
+    path: ../..
+  PhraseLatticeKit:
+    url: https://github.com/Muilyzz/PhraseLatticeKit.git
+    from: 2.7.0
+targets:
+  StaffLaneExample:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources: [Sources]
+    dependencies:
+      - package: StaffLatticeKit
+        product: StaffLattice
+      - package: PhraseLatticeKit
+        product: PhraseLattice
+      - package: PhraseLatticeKit
+        product: PhraseLatticeUI
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_VERSION: "6.0"
