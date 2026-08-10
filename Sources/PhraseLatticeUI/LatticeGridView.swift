@@ -156,11 +156,17 @@ public struct LatticeGridView<
     private let phraseHeader: (ScoreStructureSpan) -> PhraseHeader
     private let phraseFooter: (ScoreStructureSpan) -> PhraseFooter
     private let phraseGutter: (ScoreStructureSpan) -> PhraseGutter
+    /// Declared width of the leading gutter — the **non-time space** before
+    /// each system (clefs, meter glyphs). Declared, not measured: every row
+    /// shares it, every time axis starts at the same x, and no measurement
+    /// feedback can loop. `0` means no gutter.
+    private let gutterWidth: CGFloat
 
     public init(
         source: some ScoreStructureSource,
         selection: Binding<ScoreStructureSpan?> = .constant(nil),
         beatWidth: CGFloat? = nil,
+        gutterWidth: CGFloat = 0,
         barlines: Bars,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
         @ViewBuilder measure: @escaping (LatticeMeasureContext, MeasureBeatsRow<BeatCell, Bars>) -> MeasureBox,
@@ -184,6 +190,7 @@ public struct LatticeGridView<
         self.phraseHeader = phraseHeader
         self.phraseFooter = phraseFooter
         self.phraseGutter = phraseGutter
+        self.gutterWidth = max(0, gutterWidth)
     }
 
     @State private var gridWidth: CGFloat = 0
@@ -197,10 +204,6 @@ public struct LatticeGridView<
     /// then this measurement makes the back-computation exact — the widest
     /// system fills the available width with no leftover margin.
     @State private var measuredOverhead: CGFloat?
-    /// Shared width of the leading gutter — the **non-time space** before
-    /// each system (clefs, meter glyphs). All rows share the maximum measured
-    /// width so every time axis starts at the same x. Ratchets upward only.
-    @State private var gutterWidth: CGFloat = 0
 
     /// One phrase = one line, always. If no explicit beatWidth is given it is
     /// **derived from the available width and the widest phrase**, so cells
@@ -247,15 +250,6 @@ public struct LatticeGridView<
                 HStack(alignment: .top, spacing: 0) {
                     phraseGutter(row.phrase)
                         .frame(width: gutterWidth > 0 ? gutterWidth : nil, alignment: .topLeading)
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear.onAppear {
-                                    if geo.size.width > gutterWidth + 0.5 {
-                                        gutterWidth = geo.size.width
-                                    }
-                                }
-                            }
-                        )
                     VStack(alignment: .leading, spacing: 4) {
                     phraseHeader(row.phrase)
                         .frame(width: systemWidths[row.phrase.id], alignment: .leading)
@@ -512,6 +506,7 @@ where
         source: some ScoreStructureSource,
         selection: Binding<ScoreStructureSpan?> = .constant(nil),
         beatWidth: CGFloat? = nil,
+        gutterWidth: CGFloat = 0,
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
         @ViewBuilder phraseFooter: @escaping (ScoreStructureSpan) -> PhraseFooter,
         @ViewBuilder phraseGutter: @escaping (ScoreStructureSpan) -> PhraseGutter
@@ -520,6 +515,7 @@ where
             source: source,
             selection: selection,
             beatWidth: beatWidth,
+            gutterWidth: gutterWidth,
             barlines: DefaultBarlineProvider(),
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
