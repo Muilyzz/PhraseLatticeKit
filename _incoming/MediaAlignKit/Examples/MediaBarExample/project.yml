@@ -1,0 +1,26 @@
+name: MediaBarExample
+options:
+  bundleIdPrefix: com.muilyzz
+packages:
+  MediaAlignKit:
+    path: ../..
+  PhraseLatticeKit:
+    path: ../../../PhraseLatticeKit
+targets:
+  MediaBarExample:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources: [Sources]
+    dependencies:
+      - package: MediaAlignKit
+        product: MediaAlign
+      - package: PhraseLatticeKit
+        product: PhraseLattice
+      - package: PhraseLatticeKit
+        product: PhraseLatticeUI
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_VERSION: "6.0"
