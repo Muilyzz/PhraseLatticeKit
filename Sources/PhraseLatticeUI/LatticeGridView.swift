@@ -139,6 +139,7 @@ public struct LatticeGridView<
     MeasureBox: View,
     PhraseHeader: View,
     PhraseFooter: View,
+    PhraseGutter: View,
     Bars: BarlineProvider
 >: View {
     private struct PhraseRow {
@@ -154,6 +155,7 @@ public struct LatticeGridView<
     private let measureBox: (LatticeMeasureContext, MeasureBeatsRow<BeatCell, Bars>) -> MeasureBox
     private let phraseHeader: (ScoreStructureSpan) -> PhraseHeader
     private let phraseFooter: (ScoreStructureSpan) -> PhraseFooter
+    private let phraseGutter: (ScoreStructureSpan) -> PhraseGutter
 
     public init(
         source: some ScoreStructureSource,
@@ -163,7 +165,8 @@ public struct LatticeGridView<
         @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
         @ViewBuilder measure: @escaping (LatticeMeasureContext, MeasureBeatsRow<BeatCell, Bars>) -> MeasureBox,
         @ViewBuilder phraseHeader: @escaping (ScoreStructureSpan) -> PhraseHeader,
-        @ViewBuilder phraseFooter: @escaping (ScoreStructureSpan) -> PhraseFooter
+        @ViewBuilder phraseFooter: @escaping (ScoreStructureSpan) -> PhraseFooter,
+        @ViewBuilder phraseGutter: @escaping (ScoreStructureSpan) -> PhraseGutter
     ) {
         self.rows = ScoreStructureIndex.phraseSpans(in: source).map { phrase in
             PhraseRow(
@@ -180,6 +183,7 @@ public struct LatticeGridView<
         self.measureBox = measure
         self.phraseHeader = phraseHeader
         self.phraseFooter = phraseFooter
+        self.phraseGutter = phraseGutter
     }
 
     @State private var gridWidth: CGFloat = 0
@@ -193,6 +197,10 @@ public struct LatticeGridView<
     /// then this measurement makes the back-computation exact — the widest
     /// system fills the available width with no leftover margin.
     @State private var measuredOverhead: CGFloat?
+    /// Shared width of the leading gutter — the **non-time space** before
+    /// each system (clefs, meter glyphs). All rows share the maximum measured
+    /// width so every time axis starts at the same x. Ratchets upward only.
+    @State private var gutterWidth: CGFloat = 0
 
     /// One phrase = one line, always. If no explicit beatWidth is given it is
     /// **derived from the available width and the widest phrase**, so cells
@@ -207,7 +215,7 @@ public struct LatticeGridView<
     private var resolvedBeatWidth: CGFloat {
         if let explicitBeatWidth { return explicitBeatWidth }
         guard let widest = widestPhrase, widest.beats > 0, gridWidth > 0 else { return 20 }
-        let available = gridWidth - 12
+        let available = gridWidth - 12 - gutterWidth
         if let measuredOverhead {
             // Exact back-computation: the widest system fills the available
             // width completely — margins stay symmetric by construction.
@@ -236,7 +244,19 @@ public struct LatticeGridView<
     public var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             ForEach(rows, id: \.phrase.id) { row in
-                VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 0) {
+                    phraseGutter(row.phrase)
+                        .frame(width: gutterWidth > 0 ? gutterWidth : nil, alignment: .topLeading)
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear.onAppear {
+                                    if geo.size.width > gutterWidth + 0.5 {
+                                        gutterWidth = geo.size.width
+                                    }
+                                }
+                            }
+                        )
+                    VStack(alignment: .leading, spacing: 4) {
                     phraseHeader(row.phrase)
                         .frame(width: systemWidths[row.phrase.id], alignment: .leading)
                     HStack(spacing: 0) {
@@ -257,6 +277,7 @@ public struct LatticeGridView<
                     )
                     phraseFooter(row.phrase)
                         .frame(width: systemWidths[row.phrase.id], alignment: .leading)
+                    }
                 }
                 .padding(6)
                 .background(
@@ -309,6 +330,7 @@ where
     MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
     PhraseHeader == DefaultPhraseHeader,
     PhraseFooter == EmptyView,
+    PhraseGutter == EmptyView,
     Bars == DefaultBarlineProvider
 {
     /// Custom beat cells; everything else default.
@@ -326,7 +348,8 @@ where
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
             phraseHeader: { DefaultPhraseHeader(phrase: $0) },
-            phraseFooter: { _ in EmptyView() }
+            phraseFooter: { _ in EmptyView() },
+            phraseGutter: { _ in EmptyView() }
         )
     }
 }
@@ -335,6 +358,7 @@ extension LatticeGridView
 where
     MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
     PhraseFooter == EmptyView,
+    PhraseGutter == EmptyView,
     Bars == DefaultBarlineProvider
 {
     /// Custom beat cells and phrase headers; default measures and barlines.
@@ -353,7 +377,8 @@ where
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
             phraseHeader: phraseHeader,
-            phraseFooter: { _ in EmptyView() }
+            phraseFooter: { _ in EmptyView() },
+            phraseGutter: { _ in EmptyView() }
         )
     }
 }
@@ -362,6 +387,7 @@ extension LatticeGridView
 where
     PhraseHeader == DefaultPhraseHeader,
     PhraseFooter == EmptyView,
+    PhraseGutter == EmptyView,
     Bars == DefaultBarlineProvider
 {
     /// Custom beat cells and measure boxes; default headers and barlines.
@@ -380,7 +406,8 @@ where
             beat: beat,
             measure: measure,
             phraseHeader: { DefaultPhraseHeader(phrase: $0) },
-            phraseFooter: { _ in EmptyView() }
+            phraseFooter: { _ in EmptyView() },
+            phraseGutter: { _ in EmptyView() }
         )
     }
 }
@@ -389,7 +416,8 @@ extension LatticeGridView
 where
     MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
     PhraseHeader == DefaultPhraseHeader,
-    PhraseFooter == EmptyView
+    PhraseFooter == EmptyView,
+    PhraseGutter == EmptyView
 {
     /// Custom beat cells and barline provider; default measures and headers.
     public init(
@@ -407,7 +435,8 @@ where
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
             phraseHeader: { DefaultPhraseHeader(phrase: $0) },
-            phraseFooter: { _ in EmptyView() }
+            phraseFooter: { _ in EmptyView() },
+            phraseGutter: { _ in EmptyView() }
         )
     }
 }
@@ -443,6 +472,7 @@ extension LatticeGridView
 where
     MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
     PhraseHeader == DefaultPhraseHeader,
+    PhraseGutter == EmptyView,
     Bars == DefaultBarlineProvider
 {
     /// Custom beat cells and a phrase footer lane; everything else default.
@@ -463,7 +493,39 @@ where
             beat: beat,
             measure: { DefaultMeasureBox(context: $0, beats: $1) },
             phraseHeader: { DefaultPhraseHeader(phrase: $0) },
-            phraseFooter: phraseFooter
+            phraseFooter: phraseFooter,
+            phraseGutter: { _ in EmptyView() }
+        )
+    }
+}
+
+extension LatticeGridView
+where
+    MeasureBox == DefaultMeasureBox<BeatCell, Bars>,
+    PhraseHeader == DefaultPhraseHeader,
+    Bars == DefaultBarlineProvider
+{
+    /// Custom beat cells, footer lane, and leading gutter (non-time space —
+    /// clefs, meter glyphs); everything else default. All rows share the
+    /// widest gutter so every time axis starts at the same x.
+    public init(
+        source: some ScoreStructureSource,
+        selection: Binding<ScoreStructureSpan?> = .constant(nil),
+        beatWidth: CGFloat? = nil,
+        @ViewBuilder beat: @escaping (ScoreStructureSpan) -> BeatCell,
+        @ViewBuilder phraseFooter: @escaping (ScoreStructureSpan) -> PhraseFooter,
+        @ViewBuilder phraseGutter: @escaping (ScoreStructureSpan) -> PhraseGutter
+    ) {
+        self.init(
+            source: source,
+            selection: selection,
+            beatWidth: beatWidth,
+            barlines: DefaultBarlineProvider(),
+            beat: beat,
+            measure: { DefaultMeasureBox(context: $0, beats: $1) },
+            phraseHeader: { DefaultPhraseHeader(phrase: $0) },
+            phraseFooter: phraseFooter,
+            phraseGutter: phraseGutter
         )
     }
 }
