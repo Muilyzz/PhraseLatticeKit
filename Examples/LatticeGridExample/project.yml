@@ -1,0 +1,22 @@
+name: LatticeGridExample
+options:
+  bundleIdPrefix: com.muilyzz
+packages:
+  PhraseLatticeKit:
+    path: ../..
+targets:
+  LatticeGridExample:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources: [Sources]
+    dependencies:
+      - package: PhraseLatticeKit
+        product: PhraseLattice
+      - package: PhraseLatticeKit
+        product: PhraseLatticeUI
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_VERSION: "6.0"

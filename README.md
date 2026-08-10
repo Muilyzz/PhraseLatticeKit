@@ -63,6 +63,10 @@ swift run demo
 prints the whole story — default grid, pin union, meter gating, cursor walk —
 in your terminal, no Xcode required.
 
+For the visual version, open `Examples/LatticeGridExample` (project included)
+and run it on an iOS simulator — toggle a phrase hinge and watch the grid
+re-fold live.
+
 ## Rendering: layout is the product, content is injected
 
 The `PhraseLatticeUI` product ships a minimal SwiftUI renderer. The grid draws
