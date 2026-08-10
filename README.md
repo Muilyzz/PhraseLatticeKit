@@ -91,9 +91,12 @@ Grid laws the renderer owns (everything else is a slot):
   grid never invents one. `beatWidth` is derived from the available width and
   the widest phrase (cells and their computed font shrink instead of
   wrapping); pass an explicit `beatWidth` to opt out.
+- **Whitespace is phrase-level only** — time is continuous inside a phrase,
+  so measures sit flush: a gap between bars would be a lie. Boundaries are
+  carried by barlines, never by spacing.
 - **Boundary-weighted barlines** — `BarlineProvider` generates dividers by
   boundary rank (phrase › measure › beat); `DefaultBarlineProvider` draws
-  heavier lines for higher boundaries.
+  heavier lines for higher boundaries, opening and closing each system.
 - **Text law** — cell font size derives from `beatWidth`; content may shrink
   but never truncates ("…") or wraps.
 

@@ -111,23 +111,15 @@ public struct DefaultMeasureBox<BeatCell: View, Bars: BarlineProvider>: View {
     public let beats: MeasureBeatsRow<BeatCell, Bars>
 
     public var body: some View {
+        // Flush by law: whitespace only exists at the phrase level. Measure
+        // boundaries are carried by barlines, not gaps or boxes.
         beats
-            .padding(2)
             .background(
-                RoundedRectangle(cornerRadius: 6)
+                Rectangle()
                     .fill(
                         context.isSelected
                             ? Color.accentColor.opacity(0.15)
                             : Color.clear
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(
-                        context.isSelected
-                            ? AnyShapeStyle(Color.accentColor)
-                            : AnyShapeStyle(.quaternary),
-                        lineWidth: context.isSelected ? 1.5 : 1
                     )
             )
     }
@@ -199,11 +191,10 @@ public struct LatticeGridView<
         }
         .max { $0.beats < $1.beats }
         guard let widest, widest.beats > 0, gridWidth > 0 else { return 20 }
-        // Estimated non-cell overhead: measure padding + leading barlines,
-        // inter-measure spacing, inner beat barlines, plus slack for the
-        // phrase row padding and estimate error.
-        let overhead = CGFloat(widest.measures) * 6
-            + CGFloat(max(widest.measures - 1, 0)) * 8
+        // Estimated non-cell overhead: leading + trailing barlines and inner
+        // beat barlines (measures sit flush — whitespace is phrase-level
+        // only), plus slack for the phrase row padding and estimate error.
+        let overhead = CGFloat(widest.measures) * 2 + 2
             + CGFloat(max(widest.beats - widest.measures, 0)) * 0.5
             + 20
         let width = (gridWidth - overhead) / CGFloat(widest.beats)
@@ -215,11 +206,13 @@ public struct LatticeGridView<
             ForEach(rows, id: \.phrase.id) { row in
                 VStack(alignment: .leading, spacing: 4) {
                     phraseHeader(row.phrase)
-                    HStack(spacing: 8) {
+                    HStack(spacing: 0) {
                         ForEach(row.measures.indices, id: \.self) { index in
                             measureCell(row, index: index)
                         }
+                        barlines.barline(at: .phrase)
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(6)
                 .background(
