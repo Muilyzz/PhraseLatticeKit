@@ -2,12 +2,13 @@ import PhraseLattice
 import SwiftUI
 
 /// Notation front matter for PhraseLatticeKit's `phraseGutter` slot — the
-/// **non-time space** before a system: clef and meter glyphs.
+/// **non-time space** before a system: clef and meter, written the way
+/// scores write them (the meter as a stacked fraction beside the clef, on
+/// the staff).
 ///
-/// The gutter reuses the same coordinate story as every lane: it simply sits
-/// before x = 0 of the time axis, so the lattice's alignment laws are
-/// untouched. Pass the height of your staff lane so the clef centers on the
-/// staff below the beats row.
+/// The gutter bottom-aligns with the row (kit law), so sizing this view to
+/// the staff lane's height lines the clef and fraction up with the staff by
+/// construction.
 public struct StaffGutterView: View {
     public let meter: MeterSignature
     public let staffLaneHeight: CGFloat
@@ -18,17 +19,17 @@ public struct StaffGutterView: View {
     }
 
     public var body: some View {
-        VStack(alignment: .center, spacing: 10) {
-            VStack(spacing: -2) {
+        HStack(alignment: .center, spacing: staffLaneHeight * 0.05) {
+            Text("𝄞")
+                .font(.system(size: staffLaneHeight * 0.42))
+            VStack(spacing: -staffLaneHeight * 0.055) {
                 Text("\(meter.numerator)")
                 Text("\(meter.denominator)")
             }
-            .font(.system(size: 13, weight: .bold, design: .serif).monospacedDigit())
-            Text("𝄞")
-                .font(.system(size: staffLaneHeight * 0.42))
-                .frame(height: staffLaneHeight)
+            .font(.system(size: staffLaneHeight * 0.24, weight: .bold, design: .serif).monospacedDigit())
         }
-        .padding(.trailing, 8)
+        .frame(height: staffLaneHeight)
         .padding(.leading, 2)
+        .padding(.trailing, 6)
     }
 }

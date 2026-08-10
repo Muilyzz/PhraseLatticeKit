@@ -6,7 +6,7 @@ packages:
     path: ../..
   PhraseLatticeKit:
     url: https://github.com/Muilyzz/PhraseLatticeKit.git
-    from: 2.8.1
+    from: 2.8.2
 targets:
   StaffLaneExample:
     type: application

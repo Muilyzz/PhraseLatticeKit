@@ -51,8 +51,6 @@ struct ContentView: View {
     @State private var beatsPerBar = 4
     @State private var selection: ScoreStructureSpan?
 
-    private let staffHeight: CGFloat = 116
-
     private var signature: KeySignature { KeySignature(fifths: fifths) }
     private var sheet: MelodySheet {
         MelodySheet(meter: MeterSignature(numerator: beatsPerBar, denominator: 4))
@@ -60,43 +58,54 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    // Top gutter: the selectors.
-                    HStack(spacing: 12) {
-                        Picker("Meter", selection: $beatsPerBar) {
-                            Text("4/4").tag(4)
-                            Text("2/4").tag(2)
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 150)
-                        Stepper(
-                            value: $fifths, in: -7...7
-                        ) {
-                            Text(fifths >= 0 ? "♯\(fifths)" : "♭\(-fifths)")
-                                .font(.callout.monospacedDigit().weight(.semibold))
-                        }
-                    }
+            // Fixed proportions: every height derives from the width, so
+            // iPhone and iPad lay out the same shape (denser on iPhone).
+            GeometryReader { geo in
+                let contentWidth = geo.size.width - 32
+                let staffHeight = contentWidth * 0.26
+                let gutter = max(34, contentWidth * 0.105)
 
-                    LatticeGridView(
-                        source: sheet,
-                        selection: $selection,
-                        gutterWidth: 40
-                    ) { beat in
-                        Text(beat.ordinal.map(String.init) ?? "·")
-                    } phraseFooter: { phrase in
-                        StaffLaneView(
-                            phrase: phrase,
-                            notes: melody,
-                            signature: signature
-                        )
-                        .frame(height: staffHeight)
-                        .padding(.top, 2)
-                    } phraseGutter: { _ in
-                        StaffGutterView(meter: sheet.meter, staffLaneHeight: staffHeight)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: contentWidth * 0.03) {
+                        HStack(spacing: 12) {
+                            // The chord-score side writes the meter
+                            // horizontally — as an editable control.
+                            Menu {
+                                Button("4/4") { beatsPerBar = 4 }
+                                Button("2/4") { beatsPerBar = 2 }
+                            } label: {
+                                Label("\(beatsPerBar)/4", systemImage: "chevron.up.chevron.down")
+                                    .font(.callout.monospacedDigit().weight(.semibold))
+                            }
+                            .buttonStyle(.bordered)
+                            Stepper(
+                                value: $fifths, in: -7...7
+                            ) {
+                                Text(fifths >= 0 ? "♯\(fifths)" : "♭\(-fifths)")
+                                    .font(.callout.monospacedDigit().weight(.semibold))
+                            }
+                        }
+
+                        LatticeGridView(
+                            source: sheet,
+                            selection: $selection,
+                            gutterWidth: gutter
+                        ) { beat in
+                            Text(beat.ordinal.map(String.init) ?? "·")
+                        } phraseFooter: { phrase in
+                            StaffLaneView(
+                                phrase: phrase,
+                                notes: melody,
+                                signature: signature
+                            )
+                            .frame(height: staffHeight)
+                            .padding(.top, 2)
+                        } phraseGutter: { _ in
+                            StaffGutterView(meter: sheet.meter, staffLaneHeight: staffHeight)
+                        }
                     }
+                    .padding()
                 }
-                .padding()
             }
             .navigationTitle("StaffLattice")
         }
