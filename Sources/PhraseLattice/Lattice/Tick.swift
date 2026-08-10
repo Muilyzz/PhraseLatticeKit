@@ -2,7 +2,7 @@ import Foundation
 
 /// The single PPQ lattice constant — ScoreCore owns its tick resolution.
 ///
-/// Mirrors `HarmonicsKit.RhythmGrid.ticksPerBeat` by value (drift-guarded in
+/// Mirrors `HarmonyKit.RhythmGrid.ticksPerBeat` by value (drift-guarded in
 /// ScoreKitTests) but carries no dependency: segmentation vocabulary is
 /// self-contained; harmony layers stack on top via ``ScoreStructureSource``.
 public enum ScoreTickGrid {
