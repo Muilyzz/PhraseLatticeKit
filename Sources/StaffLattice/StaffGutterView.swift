@@ -2,13 +2,12 @@ import PhraseLattice
 import SwiftUI
 
 /// Notation front matter for PhraseLatticeKit's `phraseGutter` slot — the
-/// **non-time space** before a system: clef and meter, written the way
-/// scores write them (the meter as a stacked fraction beside the clef, on
-/// the staff).
+/// **non-time space** before a system, drawn the way scores draw it: the
+/// grand-staff lines continue under the clefs and stacked meter fractions.
 ///
-/// The gutter bottom-aligns with the row (kit law), so sizing this view to
-/// the staff lane's height lines the clef and fraction up with the staff by
-/// construction.
+/// Uses the same fixed step window as ``StaffLaneView``, so its lines meet
+/// the lane's lines exactly. Clefs are anchored music-theoretically: the
+/// treble curl centers on the G4 line, the bass dots straddle the F3 line.
 public struct StaffGutterView: View {
     public let meter: MeterSignature
     public let staffLaneHeight: CGFloat
@@ -19,17 +18,43 @@ public struct StaffGutterView: View {
     }
 
     public var body: some View {
-        HStack(alignment: .center, spacing: staffLaneHeight * 0.05) {
-            Text("𝄞")
-                .font(.system(size: staffLaneHeight * 0.42))
-            VStack(spacing: -staffLaneHeight * 0.055) {
-                Text("\(meter.numerator)")
-                Text("\(meter.denominator)")
+        Canvas { context, size in
+            GrandStaffDrawing.drawLines(context, size: size)
+
+            func y(_ step: Int) -> CGFloat {
+                StaffGeometry.y(forStep: step, height: size.height)
             }
-            .font(.system(size: staffLaneHeight * 0.24, weight: .bold, design: .serif).monospacedDigit())
+            let half = size.height / CGFloat(
+                StaffGeometry.grandStaffStepRange.upperBound
+                    - StaffGeometry.grandStaffStepRange.lowerBound
+            )
+            let clefX = size.width * 0.30
+
+            // Clefs, anchored to their reference lines.
+            context.draw(
+                Text("𝄞").font(.system(size: half * 9.5)),
+                at: CGPoint(x: clefX, y: y(StaffGeometry.trebleClefAnchorStep) - half * 0.4)
+            )
+            context.draw(
+                Text("𝄢").font(.system(size: half * 6.0)),
+                at: CGPoint(x: clefX, y: y(StaffGeometry.bassClefAnchorStep) + half * 0.4)
+            )
+
+            // Stacked meter fractions on both staves.
+            let fractionX = size.width * 0.72
+            let fractionFont = Font.system(size: half * 3.6, weight: .bold, design: .serif)
+            for (numeratorStep, denominatorStep) in [(36, 32), (24, 20)] {
+                context.draw(
+                    Text("\(meter.numerator)").font(fractionFont),
+                    at: CGPoint(x: fractionX, y: y(numeratorStep))
+                )
+                context.draw(
+                    Text("\(meter.denominator)").font(fractionFont),
+                    at: CGPoint(x: fractionX, y: y(denominatorStep))
+                )
+            }
         }
         .frame(height: staffLaneHeight)
-        .padding(.leading, 2)
-        .padding(.trailing, 6)
+        .padding(.trailing, 2)
     }
 }

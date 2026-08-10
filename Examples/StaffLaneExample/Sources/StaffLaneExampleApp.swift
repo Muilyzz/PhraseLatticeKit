@@ -10,10 +10,22 @@ struct MelodySheet: ScoreStructureSource {
     let id = UUID()
     var title = "Staff lane"
     var durationTicks = 8 * 96
-    var meter: MeterSignature
-    var meterMap: MeterMap { MeterMap(events: [MeterEvent(tick: 0, signature: meter)]) }
+    /// Meter hinges — per the lattice law, meter statements sit at phrase
+    /// starts. Two hinges here: tick 0 and tick 384.
+    var meterA: MeterSignature
+    var meterB: MeterSignature
+    var meterMap: MeterMap {
+        MeterMap(events: [
+            MeterEvent(tick: 0, signature: meterA),
+            MeterEvent(tick: 384, signature: meterB),
+        ])
+    }
     var pickupTicks: Int { 0 }
     var phraseBoundaries: [PhraseBoundary] { [] }
+
+    func meter(at tick: ScoreTick) -> MeterSignature {
+        tick < 384 ? meterA : meterB
+    }
 
     func bar(containing tick: ScoreTick) throws -> DerivedBar? {
         try meterMap.bar(containing: tick, pickupTicks: pickupTicks)
@@ -48,12 +60,23 @@ struct StaffLaneExampleApp: App {
 
 struct ContentView: View {
     @State private var fifths = 2
-    @State private var beatsPerBar = 4
+    @State private var beatsA = 4
+    @State private var beatsB = 4
     @State private var selection: ScoreStructureSpan?
 
     private var signature: KeySignature { KeySignature(fifths: fifths) }
     private var sheet: MelodySheet {
-        MelodySheet(meter: MeterSignature(numerator: beatsPerBar, denominator: 4))
+        MelodySheet(
+            meterA: MeterSignature(numerator: beatsA, denominator: 4),
+            meterB: MeterSignature(numerator: beatsB, denominator: 4)
+        )
+    }
+
+    /// Every phrase gets its own editable meter — the edit targets the
+    /// hinge governing that phrase's start (meter changes are only legal
+    /// at phrase starts, so the control sits exactly on the rule).
+    private func meterBinding(for phrase: ScoreStructureSpan) -> Binding<Int> {
+        phrase.range.startTick < 384 ? $beatsA : $beatsB
     }
 
     var body: some View {
@@ -62,28 +85,16 @@ struct ContentView: View {
             // iPhone and iPad lay out the same shape (denser on iPhone).
             GeometryReader { geo in
                 let contentWidth = geo.size.width - 32
-                let staffHeight = contentWidth * 0.26
+                let staffHeight = contentWidth * 0.44
                 let gutter = max(34, contentWidth * 0.105)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: contentWidth * 0.03) {
-                        HStack(spacing: 12) {
-                            // The chord-score side writes the meter
-                            // horizontally — as an editable control.
-                            Menu {
-                                Button("4/4") { beatsPerBar = 4 }
-                                Button("2/4") { beatsPerBar = 2 }
-                            } label: {
-                                Label("\(beatsPerBar)/4", systemImage: "chevron.up.chevron.down")
-                                    .font(.callout.monospacedDigit().weight(.semibold))
-                            }
-                            .buttonStyle(.bordered)
-                            Stepper(
-                                value: $fifths, in: -7...7
-                            ) {
-                                Text(fifths >= 0 ? "♯\(fifths)" : "♭\(-fifths)")
-                                    .font(.callout.monospacedDigit().weight(.semibold))
-                            }
+                        Stepper(
+                            value: $fifths, in: -7...7
+                        ) {
+                            Text(fifths >= 0 ? "♯\(fifths)" : "♭\(-fifths)")
+                                .font(.callout.monospacedDigit().weight(.semibold))
                         }
 
                         LatticeGridView(
@@ -92,6 +103,21 @@ struct ContentView: View {
                             gutterWidth: gutter
                         ) { beat in
                             Text(beat.ordinal.map(String.init) ?? "·")
+                        } phraseHeader: { phrase in
+                            // Chord-score side: horizontal meter notation,
+                            // editable, on every phrase (the hinge rule).
+                            HStack(spacing: 8) {
+                                Text(phrase.label)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(.secondary)
+                                Menu {
+                                    Button("4/4") { meterBinding(for: phrase).wrappedValue = 4 }
+                                    Button("2/4") { meterBinding(for: phrase).wrappedValue = 2 }
+                                } label: {
+                                    Text("\(sheet.meter(at: phrase.range.startTick).numerator)/4 ▾")
+                                        .font(.caption.monospacedDigit().weight(.semibold))
+                                }
+                            }
                         } phraseFooter: { phrase in
                             StaffLaneView(
                                 phrase: phrase,
@@ -100,8 +126,11 @@ struct ContentView: View {
                             )
                             .frame(height: staffHeight)
                             .padding(.top, 2)
-                        } phraseGutter: { _ in
-                            StaffGutterView(meter: sheet.meter, staffLaneHeight: staffHeight)
+                        } phraseGutter: { phrase in
+                            StaffGutterView(
+                                meter: sheet.meter(at: phrase.range.startTick),
+                                staffLaneHeight: staffHeight
+                            )
                         }
                     }
                     .padding()

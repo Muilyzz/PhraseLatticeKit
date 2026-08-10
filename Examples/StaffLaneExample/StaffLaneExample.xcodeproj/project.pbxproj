@@ -327,7 +327,7 @@
 			repositoryURL = "https://github.com/Muilyzz/PhraseLatticeKit.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.8.2;
+				minimumVersion = 2.8.3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
