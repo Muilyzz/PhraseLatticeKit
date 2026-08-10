@@ -184,26 +184,49 @@ public struct LatticeGridView<
     /// strips) share the system's endpoints: uniform time density inside a
     /// phrase makes that a 1:1 linear alignment with the beats below.
     @State private var systemWidths: [String: CGFloat] = [:]
+    /// Measured non-cell overhead (barlines) of the widest system. Slot
+    /// barline widths are unknown a priori, so the first pass estimates,
+    /// then this measurement makes the back-computation exact — the widest
+    /// system fills the available width with no leftover margin.
+    @State private var measuredOverhead: CGFloat?
 
     /// One phrase = one line, always. If no explicit beatWidth is given it is
     /// **derived from the available width and the widest phrase**, so cells
     /// (and their computed font) shrink rather than the phrase wrapping.
-    private var resolvedBeatWidth: CGFloat {
-        if let explicitBeatWidth { return explicitBeatWidth }
-        let widest = rows.map { row -> (beats: Int, measures: Int) in
-            let beats = row.measures.reduce(0) { $0 + $1.beats.count }
-            return (beats, row.measures.count)
+    private var widestPhrase: (beats: Int, measures: Int)? {
+        rows.map { row -> (beats: Int, measures: Int) in
+            (row.measures.reduce(0) { $0 + $1.beats.count }, row.measures.count)
         }
         .max { $0.beats < $1.beats }
-        guard let widest, widest.beats > 0, gridWidth > 0 else { return 20 }
-        // Estimated non-cell overhead: leading + trailing barlines and inner
-        // beat barlines (measures sit flush — whitespace is phrase-level
-        // only), plus slack for the phrase row padding and estimate error.
-        let overhead = CGFloat(widest.measures) * 2 + 2
+    }
+
+    private var resolvedBeatWidth: CGFloat {
+        if let explicitBeatWidth { return explicitBeatWidth }
+        guard let widest = widestPhrase, widest.beats > 0, gridWidth > 0 else { return 20 }
+        let available = gridWidth - 12
+        if let measuredOverhead {
+            // Exact back-computation: the widest system fills the available
+            // width completely — margins stay symmetric by construction.
+            return max(8, (available - measuredOverhead) / CGFloat(widest.beats))
+        }
+        // First pass only: conservative estimate until the overhead is
+        // measured (leading/trailing/beat barlines are slot-provided).
+        let estimate = CGFloat(widest.measures) * 2 + 2
             + CGFloat(max(widest.beats - widest.measures, 0)) * 0.5
-            + 20
-        let width = (gridWidth - overhead) / CGFloat(widest.beats)
-        return max(8, width.rounded(.down))
+        return max(8, (available - estimate) / CGFloat(widest.beats))
+    }
+
+    private func recordSystemWidth(_ width: CGFloat, for row: PhraseRow) {
+        if systemWidths[row.phrase.id] != width {
+            systemWidths[row.phrase.id] = width
+        }
+        // Measure the barline overhead once, then freeze: it is independent
+        // of the available width, and re-recording while sibling rows are
+        // mid-layout would oscillate.
+        guard measuredOverhead == nil, gridWidth > 0 else { return }
+        let beats = row.measures.reduce(0) { $0 + $1.beats.count }
+        guard let widest = widestPhrase, beats == widest.beats else { return }
+        measuredOverhead = max(0, width - CGFloat(beats) * resolvedBeatWidth)
     }
 
     public var body: some View {
@@ -222,9 +245,9 @@ public struct LatticeGridView<
                     .background(
                         GeometryReader { geo in
                             Color.clear
-                                .onAppear { systemWidths[row.phrase.id] = geo.size.width }
+                                .onAppear { recordSystemWidth(geo.size.width, for: row) }
                                 .onChange(of: geo.size.width) { _, newWidth in
-                                    systemWidths[row.phrase.id] = newWidth
+                                    recordSystemWidth(newWidth, for: row)
                                 }
                         }
                     )
