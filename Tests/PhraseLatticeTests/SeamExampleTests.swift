@@ -2,7 +2,7 @@ import PhraseLattice
 import XCTest
 
 /// Living example for the ``ScoreStructureSource`` seam: a host document that
-/// knows nothing about harmony (lyrics only) adopts the eight-member contract
+/// knows nothing about harmony (lyrics only) adopts the seven-member contract
 /// and reuses the whole policy → projection → cursor chain.
 private struct LyricSheet {
     let id = UUID()
@@ -26,28 +26,6 @@ extension LyricSheet: ScoreStructureSource {
     }
 }
 
-/// Media is opt-in: a host that links a song adopts the refinement protocol
-/// and the projection additionally emits the offset lead-in marker.
-private struct SongSketch: ScoreMediaLinkedSource {
-    let id = UUID()
-    var title = "Song sketch"
-    var durationTicks = 8 * 96
-    var pickupTicks: Int { 0 }
-    var phraseBoundaries: [PhraseBoundary] { [] }
-    var meterMap = MeterMap(events: [
-        MeterEvent(tick: 0, signature: MeterSignature(numerator: 4, denominator: 4)),
-    ])
-    var linkedMedia: ScoreLinkedMedia? {
-        ScoreLinkedMedia(
-            downbeatOffsetMilliseconds: 1200,
-            durationMilliseconds: 210_000,
-            isInspectable: false
-        )
-    }
-    func bar(containing tick: ScoreTick) throws -> DerivedBar? {
-        try meterMap.bar(containing: tick, pickupTicks: pickupTicks)
-    }
-}
 
 final class ScoreStructureSourceSeamTests: XCTestCase {
     func testForeignDocumentGetsDefaultFourBarProjection() {
@@ -73,18 +51,7 @@ final class ScoreStructureSourceSeamTests: XCTestCase {
         XCTAssertEqual(ScoreStructureIndex.phraseSpans(in: sheet).count, 5)
     }
 
-    func testMediaCapabilityIsOptIn() {
-        // Base contract knows nothing about media → no lead-in marker.
-        let pure = LyricSheet()
-        XCTAssertNil(
-            ScoreStructureIndex.phraseSpans(in: pure).first { $0.ordinal == 0 }
-        )
-        // Adopting ScoreMediaLinkedSource turns the media offset into the
-        // ordinal-0 lead-in marker.
-        let linked = SongSketch()
-        let leadIn = ScoreStructureIndex.phraseSpans(in: linked).first { $0.ordinal == 0 }
-        XCTAssertNotNil(leadIn)
-    }
+
 
     func testCursorNavigatesForeignDocument() {
         let sheet = LyricSheet()

@@ -54,35 +54,46 @@ ScoreStructureIndex.phraseSpans(in: sheet).count         // 5 phrases
 ScoreStructureCursor.move(from: nil, direction: .right, in: sheet)  // arrow-key nav
 ```
 
-## Media is opt-in, not the base contract
+## Try it
 
-The kit never learns what media *is*. If your score runs parallel to a song,
-adopt the refinement and describe the media only by its traits — offset,
-extent, and whether its data can be inspected:
+```bash
+swift run demo
+```
+
+prints the whole story — default grid, pin union, meter gating, cursor walk —
+in your terminal, no Xcode required.
+
+## Rendering: layout is the product, content is injected
+
+The `PhraseLatticeUI` product ships a minimal SwiftUI renderer. The grid draws
+phrases › measures › beats and never learns what lives inside a beat — the
+slot decides:
 
 ```swift
-extension MyDocument: ScoreMediaLinkedSource {
-    var linkedMedia: ScoreLinkedMedia? {
-        ScoreLinkedMedia(
-            downbeatOffsetMilliseconds: 1200,   // media starts before the score
-            durationMilliseconds: 210_000,
-            isInspectable: false                // e.g. a DRM stream
-        )
-    }
+import PhraseLatticeUI
+
+LatticeGridView(source: myDocument, selection: $selection) { beat in
+    Text(myContent(for: beat))     // a chord, a lyric, anything
 }
 ```
 
-The projection then additionally emits the ordinal-0 lead-in marker. Time on
-the lattice is *conceptual* (what a musician thinks); wall-clock time lives on
-the media axis above this kit.
+## Media lives above, not here
+
+This kit is purely the discrete conceptual world. Time on the lattice is what
+a musician *thinks*; wall-clock time — a song running parallel to the score —
+belongs to the extension pack
+**[MediaAlignKit](https://github.com/Muilyzz/MediaAlignKit)**, which layers
+the media concept and the continuous ↔ discrete conversion math on top of
+this kit's seam.
 
 ## Contents
 
-| Folder | What |
+| Where | What |
 |---|---|
 | `Lattice/` | `ScoreTick` · `ScoreRange` · `ScoreTickGrid` · `MeterMap` · `TempoMap` · `NoteValue` |
 | `Phrase/` | `PhraseBoundary` · `SystemBreak` · `ScorePhrasePolicy` |
-| `Seam/` | `ScoreStructureSource` (base) · `ScoreMediaLinkedSource` + `ScoreLinkedMedia` (opt-in) |
+| `Seam/` | `ScoreStructureSource` — the seven-member host contract |
 | `Projection/` | `ScoreStructureIndex` (Score › Phrase › Measure › Beat spans) · logical & geometric cursors |
+| `PhraseLatticeUI` | `LatticeGridView` — slot-based SwiftUI grid |
 
 Tests double as living documentation — see `Tests/PhraseLatticeTests/SeamExampleTests.swift`.

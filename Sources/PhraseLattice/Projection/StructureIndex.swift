@@ -97,7 +97,7 @@ public enum ScoreStructureIndex {
 
         var spans: [ScoreStructureSpan] = []
 
-        // Phrase **0** — exceptional lead-in (musical pickup and/or media offset before t0).
+        // Phrase **0** — exceptional musical lead-in (anacrusis before t0).
         if let leadIn = leadInPhraseSpan(in: document) {
             spans.append(leadIn)
         }
@@ -127,25 +127,13 @@ public enum ScoreStructureIndex {
     /// Lead-in span at ordinal 0 when pickup ticks or media downbeat offset exist.
     private static func leadInPhraseSpan(in document: some ScoreStructureSource) -> ScoreStructureSpan? {
         let pickup = max(document.pickupTicks, 0)
-        // Media is opt-in: only sources that declare the capability get the
-        // offset-only lead-in marker.
-        let offsetMs = (document as? any ScoreMediaLinkedSource)?
-            .linkedMedia?.downbeatOffsetMilliseconds ?? 0
-        guard pickup > 0 || offsetMs > 0 else { return nil }
+        // Musical lead-in only (anacrusis). Media-driven lead-ins are layered
+        // above by extension packs (MediaAlignKit decorates this projection).
+        guard pickup > 0 else { return nil }
 
-        let startTick: ScoreTick
-        let durationTicks: Int
-        let label: String
-        if pickup > 0 {
-            startTick = -pickup
-            durationTicks = pickup
-            label = "Phrase 0 · Pickup"
-        } else {
-            // Offset-only: no score ticks before 0 — synthetic empty lead-in marker at t0.
-            startTick = 0
-            durationTicks = 0
-            label = "Phrase 0 · Offset"
-        }
+        let startTick: ScoreTick = -pickup
+        let durationTicks: Int = pickup
+        let label = "Phrase 0 · Pickup"
 
         let range = ScoreRange(startTick: startTick, durationTicks: max(durationTicks, 0))
         return ScoreStructureSpan(

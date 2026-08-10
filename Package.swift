@@ -18,12 +18,23 @@ let package = Package(
     ],
     products: [
         .library(name: "PhraseLattice", targets: ["PhraseLattice"]),
+        .library(name: "PhraseLatticeUI", targets: ["PhraseLatticeUI"]),
     ],
     targets: [
         .target(
             name: "PhraseLattice",
             dependencies: [],
             path: "Sources/PhraseLattice"
+        ),
+        .target(
+            name: "PhraseLatticeUI",
+            dependencies: ["PhraseLattice"],
+            path: "Sources/PhraseLatticeUI"
+        ),
+        .executableTarget(
+            name: "demo",
+            dependencies: ["PhraseLattice"],
+            path: "Sources/demo"
         ),
         .testTarget(
             name: "PhraseLatticeTests",

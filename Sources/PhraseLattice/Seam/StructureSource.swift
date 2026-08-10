@@ -8,11 +8,10 @@ import Foundation
 /// referenced here — an upper layer joins by conforming its document type,
 /// "requesting" only these seven members. Uniformity is deliberately not a
 /// goal; each layer keeps its own vocabulary and adapts at this seam.
-/// Linked media is a special case, not part of this base contract — hosts
-/// that run parallel media opt in via ``ScoreMediaLinkedSource``.
+/// Linked media is a special case, not part of this base contract — the
+/// MediaAlignKit extension pack layers it above.
 ///
-/// `ScoreDocument` conforms retroactively below; a host with a different
-/// document model can conform independently and reuse the whole
+/// Any document model conforms retroactively and reuses the whole
 /// policy → projection → cursor chain.
 public protocol ScoreStructureSource {
     /// Stable identity used for score-level span IDs.
@@ -29,17 +28,5 @@ public protocol ScoreStructureSource {
     var meterMap: MeterMap { get }
     /// Bar derived from the meter fold at `tick`, `nil` when out of range.
     func bar(containing tick: ScoreTick) throws -> DerivedBar?
-}
-
-/// Opt-in capability: a source whose score runs **parallel to linked media**.
-///
-/// Media is a special case, not the base contract — the pure segmentation
-/// world never mentions it. A host that links a song adopts this refinement
-/// and the projection additionally emits media-driven artifacts (e.g. the
-/// offset-only "Phrase 0" lead-in marker).
-public protocol ScoreMediaLinkedSource: ScoreStructureSource {
-    /// Conceptual parallel media (offset · extent · inspectability), `nil`
-    /// when nothing is linked. Identity stays above — see ``ScoreLinkedMedia``.
-    var linkedMedia: ScoreLinkedMedia? { get }
 }
 
