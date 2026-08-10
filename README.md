@@ -78,8 +78,14 @@ import PhraseLatticeUI
 
 LatticeGridView(source: myDocument, selection: $selection) { beat in
     Text(myContent(for: beat))     // a chord, a lyric, anything
+} phraseHeader: { phrase in
+    MyHeader(phrase)               // optional slot — defaults to a small label
 }
 ```
+
+Grid law: **same time = same width** — every beat gets `beatWidth` points and
+measures soft-wrap onto new lines, so a one-bar phrase draws narrow instead of
+stretching. Everything visual beyond the fold is a slot.
 
 ## Media lives above, not here
 
