@@ -128,7 +128,7 @@ public enum ScoreStructureIndex {
     private static func leadInPhraseSpan(in document: some ScoreStructureSource) -> ScoreStructureSpan? {
         let pickup = max(document.pickupTicks, 0)
         // Musical lead-in only (anacrusis). Media-driven lead-ins are layered
-        // above by extension packs (MediaAlignKit decorates this projection).
+        // above (the MediaAlign module decorates this projection).
         guard pickup > 0 else { return nil }
 
         let startTick: ScoreTick = -pickup

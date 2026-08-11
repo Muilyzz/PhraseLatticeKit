@@ -1,7 +1,7 @@
 import PhraseLattice
 import SwiftUI
 
-/// Notation front matter for PhraseLatticeKit's `phraseGutter` slot — the
+/// Notation front matter for PhraseLatticeUI's `phraseGutter` slot — the
 /// **non-time space** before a system, drawn the way scores draw it: the
 /// grand-staff lines continue under the clefs and stacked meter fractions.
 ///

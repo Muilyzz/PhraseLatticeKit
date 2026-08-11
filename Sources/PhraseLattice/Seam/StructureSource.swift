@@ -9,7 +9,7 @@ import Foundation
 /// "requesting" only these seven members. Uniformity is deliberately not a
 /// goal; each layer keeps its own vocabulary and adapts at this seam.
 /// Linked media is a special case, not part of this base contract — the
-/// MediaAlignKit extension pack layers it above.
+/// MediaAlign module layers it above.
 ///
 /// Any document model conforms retroactively and reuses the whole
 /// policy → projection → cursor chain.

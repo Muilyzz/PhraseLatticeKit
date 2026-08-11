@@ -29,7 +29,7 @@ enum GrandStaffDrawing {
     }
 }
 
-/// A **grand staff** drawn in PhraseLatticeKit's `phraseFooter` lane —
+/// A **grand staff** drawn in PhraseLatticeUI's `phraseFooter` lane —
 /// one Canvas per phrase, no per-note view identity.
 ///
 /// Time is lattice-linear (x = f(tick), the lane shares the system's
